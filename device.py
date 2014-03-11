@@ -12,22 +12,52 @@ class Device(object):
 class Printer(Device):
 
     def __init__(self, number):
-        Device.__init__(self,number)
-        self.type = "Printer %d" % int(number)
+        Device.__init__(self, number)
+        self.name = "Printer %d" % int(number)
+
+    def print_printer_queue(self):
+        print("%s Queue\n" % self.name)
+        print("---\t---------\t--------\t---\t-----------\n")
+        for pcb in self.queue:
+            print("%s\t%s\t%s\t%s\t%s"
+                  % (pcb.pid,
+                     pcb.file_name,
+                     pcb.memory_start_region,
+                     pcb.readwrite,
+                     self.file_size))
 
 
 class CDRW(Device):
 
     def __init__(self, number):
-        Device.__init__(self,number)
-        self.type = "CDRW %d" % int(number)
+        Device.__init__(self, number)
+        self.name = "CDRW %d" % int(number)
+
+    def print_cdrw_queue(self):
+        print("%s Queue\n" % self.name)
+        print("---\t---------\t--------\t---\t-----------\n")
+        for pcb in self.queue:
+            print("%s\t%s\t%s\t%s\t%s"
+                  % (pcb.pid,
+                     pcb.file_name,
+                     pcb.memory_start_region,
+                     pcb.readwrite,
+                     self.file_size))
 
 
 class Disk(Device):
 
     def __init__(self, number):
-        Device.__init__(self,number)
-        self.type = "Disk %d" % int(number)
+        Device.__init__(self, number)
+        self.name = "Disk %d" % int(number)
 
-# test
-printer = Printer(3)
+    def print_disk_queue(self):
+        print("%s Queue\n" % self.name)
+        print("---\t---------\t--------\t---\t-----------\n")
+        for pcb in self.queue:
+            print("%s\t%s\t%s\t%s\t%s\n"
+                  % (pcb.pid,
+                     pcb.file_name,
+                     pcb.memory_start_region,
+                     pcb.readwrite,
+                     self.file_size))
