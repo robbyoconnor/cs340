@@ -52,7 +52,7 @@ class runit(object):
         keep_running = True
         while keep_running:
 
-            input = raw_input("[A,t,p#,d#,c#,P#,D#,C#]: ")
+            input = raw_input("[A,S,t,p#,d#,c#,P#,D#,C#]: ")
             while not validate_input(input):
                 input = raw_input("Not valid! Try again: ")
             # We know this is valid now....
@@ -60,6 +60,21 @@ class runit(object):
                 pcb = PCB()
                 self.readyQueue.add_pcb_to_readyqueue(pcb)
                 print("Added process %d " % pcb.pid)
+            elif input == "S":
+                selection = raw_input("[r,d,p,c]: ")
+                while not validate_input(selection):
+                    selection = raw_input("Invalid input! [r,d,p,c]: ")
+                if selection == "r":
+                    self.snapshot(readyQ=True)
+                elif selection == "d":
+                    self.snapshot(diskQ=False)
+                elif selection == "p":
+                    self.snapshot(printerQ=True)
+                elif selection == "c":
+
+                    self.snapshot(cdrwQ=True)
+                else:
+                    print("If we get here...fail me.")
 
             elif parse_if_terminate_syscall(input):
                 if self.readyQueue.queue_len() > 0:
@@ -72,8 +87,8 @@ class runit(object):
                     "This always happens...was it me??!! I love you anyways...")
                 keep_running = False  # break out.
 
-        def snapshot(self, diskQ=False, printerQ=False, cdrwQ=False,
-                     readyQ=False):
+    def snapshot(self, diskQ=False, printerQ=False, cdrwQ=False,
+                 readyQ=False):
 
             print("PID\tFile name\tMemStart\tR/W\tFile Length\n")
             if readyQ:

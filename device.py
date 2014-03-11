@@ -15,16 +15,19 @@ class Printer(Device):
         Device.__init__(self, number)
         self.name = "Printer %d" % int(number)
 
-    def print_printer_queue(self):
-        print("%s Queue\n" % self.name)
-        print("---\t---------\t--------\t---\t-----------\n")
-        for pcb in self.queue:
-            print("%s\t%s\t%s\t%s\t%s"
-                  % (pcb.pid,
-                     pcb.file_name,
-                     pcb.memory_start_region,
-                     pcb.readwrite,
-                     self.file_size))
+    def print_cdrw_queue(self):
+        if self.queue.len == 0:
+            print("Nothing in the %s Queue!" % self.name)
+        else:
+            print("%s Queue\n" % self.name)
+            print("---\t---------\t--------\t---\t-----------\n")
+            for pcb in self.queue:
+                print("%s\t%s\t%s\t%s\t%s"
+                      % (pcb.pid,
+                         pcb.file_name,
+                         pcb.memory_start_region,
+                         pcb.readwrite,
+                         pcb.file_size))
 
 
 class CDRW(Device):
@@ -34,15 +37,18 @@ class CDRW(Device):
         self.name = "CDRW %d" % int(number)
 
     def print_cdrw_queue(self):
-        print("%s Queue\n" % self.name)
-        print("---\t---------\t--------\t---\t-----------\n")
-        for pcb in self.queue:
-            print("%s\t%s\t%s\t%s\t%s"
-                  % (pcb.pid,
-                     pcb.file_name,
-                     pcb.memory_start_region,
-                     pcb.readwrite,
-                     self.file_size))
+        if self.queue.len == 0:
+            print("Nothing in the %s Queue!" % self.name)
+        else:
+            print("%s Queue\n" % self.name)
+            print("---\t---------\t--------\t---\t-----------\n")
+            for pcb in self.queue:
+                print("%s\t%s\t%s\t%s\t%s"
+                      % (pcb.pid,
+                         pcb.file_name,
+                         pcb.memory_start_region,
+                         pcb.readwrite,
+                         pcb.file_size))
 
 
 class Disk(Device):
@@ -51,13 +57,16 @@ class Disk(Device):
         Device.__init__(self, number)
         self.name = "Disk %d" % int(number)
 
-    def print_disk_queue(self):
-        print("%s Queue\n" % self.name)
-        print("---\t---------\t--------\t---\t-----------\n")
-        for pcb in self.queue:
-            print("%s\t%s\t%s\t%s\t%s\n"
-                  % (pcb.pid,
-                     pcb.file_name,
-                     pcb.memory_start_region,
-                     pcb.readwrite,
-                     self.file_size))
+    def print_cdrw_queue(self):
+        if self.queue.len == 0:
+            print("Nothing in the %s Queue!" % self.name)
+        else:
+            print("%s Queue\n" % self.name)
+            print("---\t---------\t--------\t---\t-----------\n")
+            for pcb in self.queue:
+                print("%s\t%s\t%s\t%s\t%s"
+                      % (pcb.pid,
+                         pcb.file_name,
+                         pcb.memory_start_region,
+                         pcb.readwrite,
+                         pcb.file_size))

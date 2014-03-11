@@ -24,12 +24,11 @@ class ReadyQueue(object):
 
     def print_readyqueue(self):
         print("Ready Queue\n")
-        print("PID\tFile name\tMemStart\tR/W\tFile Length\n")
-        print("---\t---------\t--------\t---\t-----------\n")
+        print("----- -----\n")
         for pcb in self.queue:
             print("%s\t%s\t%s\t%s\t%s"
                   % (pcb.pid,
                      pcb.file_name,
                      pcb.memory_start_region,
                      pcb.readwrite,
-                     self.file_size))
+                     pcb.file_size))

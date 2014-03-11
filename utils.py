@@ -26,7 +26,8 @@ def check_case(user_input, upper=False):
 
 def validate_input(user_input):
     import re
-    matcher = re.compile(r"^[AtSQq]{1}$|^[pPdDcC]\d+$")  # validate input
+    # validate input
+    matcher = re.compile(r"^[AtSQq]{1}$|^[pPdDcC]\d+$|^[rdpc]{1}$")
     return matcher.match(user_input) is not None
 
 
