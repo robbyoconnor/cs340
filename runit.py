@@ -1,9 +1,9 @@
 from utils import (check_integer, validate_input, parse_if_terminate_syscall,
-                   do_we_quit, remove_and_return_pcb)
+                   do_we_quit)
 
 from device import Printer, CDRW, Disk
 from myos import ReadyQueue
-import PCB
+from pcb import PCB
 
 
 class runit(object):
@@ -46,7 +46,7 @@ class runit(object):
         self.cdrws = [CDRW(n + 1) for n in range(0, int(cdrw_cnt))]
 
     def run(self):
-        print(r"The fucking os is now running.")
+        print(r"We are running...")
         print(r"To quit this shit, type 'q' or 'Q' or Ctrl+C -- I don't care.")
         os.help()
         keep_running = True
@@ -56,14 +56,21 @@ class runit(object):
             while not validate_input(input):
                 input = raw_input("Not valid! Try again: ")
             # We know this is valid now....
-            # check exist condition...
-            if do_we_quit(input):
-                print("This always happens...was it me??!!")
-                keep_running = False
-            if parse_if_terminate_syscall(input):
-                if readyQueue.queue_len():
-                    pcb = remove_and_return_pcb()
-                    print("Terminated process id %d".pcb.pid)
+            if input == "A":
+                pcb = PCB()
+                self.readyQueue.add_pcb_to_readyqueue(pcb)
+                print("Added process %d " % pcb.pid)
+
+            elif parse_if_terminate_syscall(input):
+                if self.readyQueue.queue_len() > 0:
+                    pcb = self.readyQueue.remove_and_return_pcb()
+                    print("Terminated Process %d " % pcb.pid)
+                else:
+                    print("No process is currently in the CPU.")
+            elif do_we_quit(input):
+                print(
+                    "This always happens...was it me??!! I love you anyways...")
+                keep_running = False  # break out.
 
         def snapshot(self, diskQ=False, printerQ=False, cdrwQ=False,
                      readyQ=False):

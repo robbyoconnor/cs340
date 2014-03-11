@@ -27,7 +27,7 @@ def check_case(user_input, upper=False):
 def validate_input(user_input):
     import re
     matcher = re.compile(r"^[AtSQq]{1}$|^[pPdDcC]\d+$")  # validate input
-    return not matcher.match(user_input)
+    return matcher.match(user_input) is not None
 
 
 def parse_device_information(user_input):

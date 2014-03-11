@@ -1,4 +1,3 @@
-# Represents a Process Control Block
 current_pid = 0
 
 
@@ -6,7 +5,9 @@ class PCB(object):
 
     def __init__(self, memory_start_region="", readwrite="",
                  file_name="", file_size=""):
-        self.pid = ++current_pid
+        global current_pid
+        self.pid = current_pid + 1
+        current_pid += 1
         self.memory_start_region = memory_start_region
         self.readwrite = readwrite
         self.file_name = file_name
@@ -14,4 +15,4 @@ class PCB(object):
 
     @classmethod
     def getCurrentPid(self):
-        return self.pid
+        return current_pid
