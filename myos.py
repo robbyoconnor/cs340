@@ -10,17 +10,14 @@ class ReadyQueue(object):
         self.queue.append(pcb)
         return pcb
 
-    def is_cpu_busy(self):
-        if len(self.queue) >= 1:
-            return True
-        return False
-
     def queue_len(self):
         return len(self.queue)
 
-    def remove_and_return_pcb(self):
-        pcb = self.queue.pop()
-        return pcb
+    def pop(self):
+        if self.queue_len() == 0:
+            print("The CPU is currently empty -- cannot proceed")
+        else:
+            return self.queue.pop()
 
     def print_readyqueue(self):
         print("Ready Queue\n")
