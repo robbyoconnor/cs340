@@ -12,7 +12,11 @@ type: python3.3 runit.py
 Design: 
 
 pcb.py - Process Control Block code
+
 device.py - device classes
+
 myos.py - ready queue 
+
 runit.py - The main program
+
 utils.py - utility functions -- mostly for input valiation. 
