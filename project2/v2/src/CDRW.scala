@@ -1,0 +1,3 @@
+class CDRW extends Device {
+
+}
