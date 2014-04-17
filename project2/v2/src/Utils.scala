@@ -1,5 +1,9 @@
-
+/**
+ * Could be better...too much redundancy
+ * Utility stuff for shit....
+ */
 object Utils {
+
 
   implicit class Regex(sc: StringContext) {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
@@ -31,5 +35,13 @@ object Utils {
       case r"[Qq]{1}" => true
       case _  => false
     }
+  }
+  def extractDeviceInfo(input: String): (String,Int) = {
+    var regex:scala.util.matching.Regex = """([PpDdCc]{1})(\d+)""".r
+    input match {
+      case regex(device,deviceNo) => (device,Integer.parseInt(deviceNo))
+      case _ => ("",-1)
+    }
+
   }
 }
