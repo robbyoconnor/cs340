@@ -1,3 +1,0 @@
-class Printer extends Device{
-
-}
