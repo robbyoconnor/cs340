@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ScalaProjectSettings">
     <option name="addImportMostCloseToReference" value="true" />
+    <option name="collectionTypeHighlightingLevel" value="2" />
     <option name="importsWithPrefix">
       <array>
         <option value="exclude:scala.collection.mutable.ArrayBuffer" />
@@ -49,6 +50,17 @@
         <option value="scala.collection.mutable._" />
       </array>
     </option>
+    <option name="includeBlockExpressions" value="true" />
+    <option name="includeLiterals" value="true" />
+    <option name="intInjectionMapping">
+      <map>
+        <entry key="prefix" value="JAVA" />
+        <entry key="sql" value="SQL" />
+        <entry key="sqlu" value="SQL" />
+        <entry key="xml" value="XML" />
+      </map>
+    </option>
+    <option name="searchAllSymbols" value="true" />
     <option name="showArgumentsToByNameParams" value="true" />
     <option name="sortImports" value="true" />
   </component>

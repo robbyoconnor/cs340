@@ -30,7 +30,7 @@ class OS {
     print("How many printers: ")
     var printerCnt = Utils.promptForInt()
 
-    for (i <- 0 to printerCnt-1) printers += new Printer(i + 1)
+    for (i <- 0 to printerCnt - 1) printers += new Printer(i + 1)
 
     print("How many disks: ")
     var disk_cnt = Utils.promptForInt()
@@ -40,109 +40,176 @@ class OS {
     print("How many CDRWs: ")
     var cdrw_cnt = Utils.promptForInt()
 
-    for (i <- 0 to cdrw_cnt-1) cdrws += new CDRW(i + 1)
+    for (i <- 0 to cdrw_cnt - 1) cdrws += new CDRW(i + 1)
 
     print("Enter initial burst estimate (tau) (integer greater than 0): ")
     initialTau = Utils.promptForInt()
 
     print("Enter history parameter (alpha) (float between 0 and 1): ")
-    alpha = Utils.promptForFloat(0.0f,1.0f)
+    alpha = Utils.promptForFloat(a = 0.0f, b = 1.0f)
 
   }
 
-  /**
-   *
-   * def run(self):
-        print(r"We are running...")
-        os.help()
-        keep_running = True
-        while keep_running:
-
-            user_input = input("[A,S,t,p#,d#,c#,P#,D#,C#]: ").strip()
-            while not validate_input(user_input):
-                user_input = input("Not valid! Try again: ")
-            # We know this is valid now....
-            if user_input == "A":
-                pcb = PCB()
-                self.readyQueue.add_pcb_to_readyqueue(pcb)
-                print("Added process %d " % pcb.pid)
-            elif user_input == "S":
-                selection = input("[r,d,p,c]: ")
-                while not validate_input_snapshot(selection):
-                    selection = input("Invalid input! [r,d,p,c]: ")
-                if selection == "r":
-                    self.snapshot(readyQ=True)
-                elif selection == "d":
-                    self.snapshot(diskQ=True)
-                elif selection == "p":
-                    self.snapshot(printerQ=True)
-                elif selection == "c":
-                    self.snapshot(cdrwQ=True)
-                else:
-                    print("If we get here...fail me.")
-            elif match(r"^[PDCpdc]{1}\d+$", user_input):
-                if user_input[0].islower():
-                    self.syscall(user_input)
-                elif user_input[0].isupper():
-                    self.interrupt(user_input)
-                else:
-                    print("If you see this message...dock points!")
-            elif parse_if_terminate_syscall(user_input):
-
-                if self.readyQueue.queue_len() > 0:
-                    pcb = self.readyQueue.pop()
-                    print("Terminated Process %d " % pcb.pid)
-                else:
-                    print("No process is currently in the CPU.")
-
-            elif do_we_quit(user_input):
-                print(
-                    "This always happens...was it me??!! I love you anyways...")
-                keep_running = False  # break out.
-
-   */
   def run() = {
     help()
     var done = false
     do {
-      var userInput = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:").replaceAllLiterally( """\s+""", "")
-      while(!Utils.validateInput(userInput)) {
+      var userInput: String = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
+      while (!Utils.validateInput(userInput)) {
         println("Invalid input")
-        userInput = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:").replaceAllLiterally( """\s+""", "")
+        userInput = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
       }
 
-      if(userInput == "A") {
+      if (userInput == "A") {
         var pcb = new PCB
+        pcb.tau = initialTau
+        pcb.timeLeftInCPU = initialTau
         readyqueue.enqueue(pcb)
         println(s"Added process ${pcb.pid}")
 
-      } else if(userInput == "S") {
+      } else if (userInput == "S") {
+        var selection = readLine("[r,d,p,c]: ")
+        while (!Utils.validateInput(selection)) {
+          selection = readLine("Not valid. [r,d,p,c]")
+        }
+        if (selection == "r") {
+          snapshot(readyQ = true)
+        } else if (selection == "d") {
+          snapshot(diskQ = true)
+        } else if (selection == "p") {
+          snapshot(printerQ = true)
+        } else if (selection == "c") {
+          snapshot(cdrwQ = true)
+        } else {
+          print("If we get here...fail me.")
+        }
 
-      } else if(userInput == "t") {
-      } else if(userInput == "Q" || userInput == "q") {
+      } else if (Utils.checkInterruptSyscall(userInput)) {
+        if (userInput.head.isUpper) {
+          interrupt(userInput)
+        } else if (userInput.head.isLower) {
+          syscall(userInput)
+        } else {
+          println("If you are reading this...fail me!")
+        }
+      } else if (userInput == "t") {
+        val pcb = readyqueue.dequeue()
+        println(s"Terminated process ${pcb.pid}")
+      } else if (userInput == "Q" || userInput == "q") {
+        println("This always happens...was it me??!! I love you anyst ways...")
         done = true
       }
-      var tuple: (String, Int) = Utils.extractDeviceInfo(userInput)
-      if(Utils.isInterrupt(userInput)) {
-        if(tuple._1 == "C") {
 
-        } else if(tuple._1 == "D") {
-
-        } else if(tuple._1 == "P") {
-
-        }
-      } else {
-        if (tuple._1 == "c") {
-
-        } else if (tuple._1 == "d") {
-
-        } else if (tuple._1 == "p") {
-
-        }
-      }
-    }while(!done)
+    } while (!done)
 
   }
+
+  def snapshot(printerQ: Boolean = false, diskQ: Boolean = false, cdrwQ: Boolean = false, readyQ: Boolean = false) = {
+
+    if (diskQ) {
+      for (disk <- disks) {
+        var num: Int = 1
+        disk.snapshot(s"printer $num")
+        num = num + 1
+      }
+    } else if (cdrwQ) {
+      for (cdrw <- cdrws) {
+        var num: Int = 1
+        cdrw.snapshot(s"printer $num")
+        num = num + 1
+      }
+    } else if (printerQ) {
+      for (printer <- printers) {
+        var num: Int = 1
+        printer.snapshot(s"printer $num")
+        num = num + 1
+      }
+
+    } else if (readyQ) {
+      readyqueue.snapshot()
+    }
+  }
+
+
+  def syscall(userInput: String = "") = {
+    var tuple: (String, Int) = Utils.extractDeviceInfo(userInput)
+    var deviceNo: Int = tuple._2
+    if (tuple._1 == "c") {
+      if (tuple._2 > cdrws.size) {
+        println(s"There is no CDRW ${tuple._2} Valid value: 0-${cdrws.size}.")
+      } else if (readyqueue.queue.size == 0) {
+        print("Nothing is in the CPU!")
+      } else {
+        var pcb: PCB = readyqueue.dequeue()
+        pcb = Utils.populatePCB(pcb)
+        cdrws(tuple._2).enqueue(pcb)
+        println(s"Process ${pcb.pid} has been sent to cdrw $deviceNo")
+      }
+    } else if (tuple._1 == "d") {
+      if (tuple._2 > disks.size) {
+        println(s"There is no disk ${tuple._2} Valid value: 0-${disks.size}.")
+      } else if (readyqueue.queue.size == 0) {
+        print("Nothing is in the CPU!")
+      } else {
+        var pcb: PCB = readyqueue.dequeue()
+        pcb = Utils.populatePCB(pcb, disk = true)
+        disks(tuple._2).enqueue(pcb)
+        println(s"Process ${pcb.pid} has been sent to disk $deviceNo")
+      }
+
+    } else if (tuple._1 == "p") {
+      if (tuple._2 > printers.size) {
+        println(s"There is no printer ${tuple._2} Valid value: 0-${printers.size}.")
+      } else if (readyqueue.queue.size == 0) {
+        print("Nothing is in the CPU!")
+      } else {
+        var pcb: PCB = readyqueue.dequeue()
+        pcb = Utils.populatePCB(pcb, printer = true)
+        printers(tuple._2).enqueue(pcb)
+        println(s"Process ${pcb.pid} has been sent to printer $deviceNo")
+      }
+    }
+  }
+
+  def interrupt(userInput: String = "") = {
+    val tuple: (String, Int) = Utils.extractDeviceInfo(userInput)
+    val deviceNo: Int = tuple._2
+    if (tuple._1 == "C") {
+      if (tuple._2 > cdrws.size) {
+        println(s"There is no CDRW ${tuple._2} Valid value: 1-${cdrws.size}.")
+      } else if (cdrws(tuple._2).queue.size == 0) {
+        print(s"There is nothing in CDRW $deviceNo")
+      } else {
+        var pcb: PCB = cdrws(deviceNo).dequeue()
+        readyqueue.enqueue(pcb)
+        println(s"Process ${pcb.pid} is finished in CDRW $deviceNo and " +
+          s"has been moved back to the ready queue.")
+      }
+    } else if (tuple._1 == "D") {
+      if (tuple._2 > disks.size) {
+        println(s"There is no disk ${tuple._2} Valid value: 1-${disks.size}.")
+      } else if (disks(tuple._2).queue.size == 0) {
+        print(s"There is nothing in disk $deviceNo")
+      } else {
+        var pcb: PCB = disks(deviceNo).dequeue()
+        readyqueue.enqueue(pcb)
+        println(s"Process ${pcb.pid} is finished in disk $deviceNo and " +
+          s"has been moved back to the ready queue.")
+      }
+    } else if (tuple._1 == "P") {
+      if (tuple._2 > printers.size) {
+        println(s"There is no printer ${tuple._2} Valid value: 1-${printers.size}.")
+      } else if (cdrws(tuple._2).queue.size == 0) {
+        print(s"There is nothing in CDRW $deviceNo")
+      } else {
+        var pcb: PCB = printers(deviceNo).dequeue()
+        readyqueue.enqueue(pcb)
+        println(s"Process ${pcb.pid} is finished in printer $deviceNo and " +
+          s"has been moved back to the ready queue.")
+      }
+    }
+  }
+
 
 }
 

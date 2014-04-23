@@ -1,2 +1,9 @@
 make
 run
+~compile 
+~run
+~idea.sh
+exit
+~run
+run
+~run

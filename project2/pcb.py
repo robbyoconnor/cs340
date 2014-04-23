@@ -1,13 +1,12 @@
 from utils import check_integer, match
+
 current_pid = 0
 
 
-
 class PCB(object):
-
     def __init__(self, memory_start_region="", readwrite="",
 
-                 file_name="", file_size="",cylinder=0):
+                 file_name="", file_size="", cylinder=0, tau=0):
         global current_pid
         self.pid = current_pid + 1
         current_pid += 1
@@ -16,6 +15,7 @@ class PCB(object):
         self.file_name = file_name
         self.file_size = file_size
         self.cylinder = cylinder
+        self.tau = tau
 
     @classmethod
     def getCurrentPid(self):

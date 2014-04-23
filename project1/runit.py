@@ -4,7 +4,7 @@ from utils import (check_integer, validate_input, parse_if_terminate_syscall,
 from device import Printer, CDRW, Disk
 from myos import ReadyQueue
 from pcb import PCB, populatePCB
-
+current_pid = 0
 
 class runit(object):
 
