@@ -11,20 +11,6 @@ class OS {
 
   var initialTau: Int = 0
 
-
-  def help() = {
-    println(s"Welcome to the OS...Here's how it works: ")
-    println(s"'A' will create a new process (exclude quotes).")
-    println(s"Lower case letters are system calls. e.g., p1")
-    println(s"Upper case letters are interrupts.e.g., 'P1' for printer 1.")
-    println(s"System calls can be made to access the following devices:")
-    println(s"Printers, CDRW drives, and Disk drives")
-    println(s"To kill a process, type 't'")
-    println(s"To quit me, type 'q' or 'Q'")
-    println(s"With the exception of 'A' and 't'")
-  }
-
-
   def sysgen() = {
     println("Welcome to sysgen! I'll be your guide...let's set up the system!")
     print("How many printers: ")
@@ -88,12 +74,20 @@ class OS {
         if (userInput.head.isUpper) {
           interrupt(userInput)
         } else if (userInput.head.isLower) {
+          var pcb = readyqueue.queue.head
           syscall(userInput)
         } else {
           println("If you are reading this...fail me!")
         }
       } else if (userInput == "t") {
         val pcb = readyqueue.dequeue()
+        import scala.collection.mutable.ArrayBuffer
+        var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
+        println("Terminating process...")
+        data += ArrayBuffer("total cpu time", "average CPU burst")
+        data += Utils.pcbToList(pcb, terminating = true)
+
+        println(Utils.Tabulator.format(data))
         println(s"Terminated process ${pcb.pid}")
       } else if (userInput == "Q" || userInput == "q") {
         println("This always happens...was it me??!! I love you anyst ways...")
@@ -102,6 +96,18 @@ class OS {
 
     } while (!done)
 
+  }
+
+  def help() = {
+    println(s"Welcome to the OS...Here's how it works: ")
+    println(s"'A' will create a new process (exclude quotes).")
+    println(s"Lower case letters are system calls. e.g., p1")
+    println(s"Upper case letters are interrupts.e.g., 'P1' for printer 1.")
+    println(s"System calls can be made to access the following devices:")
+    println(s"Printers, CDRW drives, and Disk drives")
+    println(s"To kill a process, type 't'")
+    println(s"To quit me, type 'q' or 'Q'")
+    println(s"With the exception of 'A' and 't'")
   }
 
   def snapshot(printerQ: Boolean = false, diskQ: Boolean = false, cdrwQ: Boolean = false, readyQ: Boolean = false) = {
@@ -141,7 +147,7 @@ class OS {
         print("Nothing is in the CPU!")
       } else {
         var pcb: PCB = readyqueue.dequeue()
-        pcb = Utils.populatePCB(pcb)
+        pcb = Utils.populatePCB(pcb, alpha = alpha)
         cdrws(tuple._2).enqueue(pcb)
         println(s"Process ${pcb.pid} has been sent to cdrw $deviceNo")
       }
@@ -152,7 +158,7 @@ class OS {
         print("Nothing is in the CPU!")
       } else {
         var pcb: PCB = readyqueue.dequeue()
-        pcb = Utils.populatePCB(pcb, disk = true)
+        pcb = Utils.populatePCB(pcb, disk = true, alpha = alpha)
         disks(tuple._2).enqueue(pcb)
         println(s"Process ${pcb.pid} has been sent to disk $deviceNo")
       }
@@ -164,7 +170,7 @@ class OS {
         print("Nothing is in the CPU!")
       } else {
         var pcb: PCB = readyqueue.dequeue()
-        pcb = Utils.populatePCB(pcb, printer = true)
+        pcb = Utils.populatePCB(pcb, printer = true, alpha = alpha)
         printers(tuple._2).enqueue(pcb)
         println(s"Process ${pcb.pid} has been sent to printer $deviceNo")
       }

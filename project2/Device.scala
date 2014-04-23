@@ -1,17 +1,20 @@
 trait Device {
+
   import scala.collection.mutable
+
   var queue = new mutable.Queue[PCB]
 
   def enqueue(pcb: PCB): PCB = {
     queue += pcb
     pcb
   }
+
   def dequeue(): PCB = {
     val pcb = queue.dequeue()
     pcb
   }
 
-  def snapshot(name:String) = {
+  def snapshot(name: String) = {
     println(s"$name\n")
     import scala.collection.mutable.ArrayBuffer
     var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
@@ -26,12 +29,13 @@ trait Device {
 class Disk(num: Int, cylinders: Int) extends Device {
 
   import scala.collection.mutable
+
   val pq1 = new mutable.PriorityQueue[PCB]()(new PCBDiskOrdering)
   val pq2 = new mutable.PriorityQueue[PCB]()(new PCBDiskOrdering)
   val name = s"disk $num"
 
   def enqueue(pcb: PCB, switchQ: Boolean): PCB = {
-    if(switchQ)
+    if (switchQ)
       pq2 += pcb
     else
       pq1 += pcb
@@ -40,7 +44,7 @@ class Disk(num: Int, cylinders: Int) extends Device {
 
   def dequeue(switchQ: Boolean): PCB = {
     var pcb = null
-    if(switchQ) {
+    if (switchQ) {
       return pq2.dequeue()
     } else {
       return pq1.dequeue()
