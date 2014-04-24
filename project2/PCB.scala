@@ -23,7 +23,7 @@ class PCB {
 
   var bursts: Float = 0.0f
 
-  var burstCount: Int  = 0.0f
+  var burstCount: Int  = 0
 }
 
 class PCBRQOrdering extends Ordering[PCB] {
