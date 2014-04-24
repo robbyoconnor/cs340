@@ -18,12 +18,16 @@ class ReadyQueue {
   }
 
   def snapshot() = {
-    println("Ready Queue")
-    var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
-    data += ArrayBuffer("PID", "Cylinder", "Memstart", "filename", "file length", "total CPU time", "burst est", "time rem.", "avg burst time")
-    for (pcb <- queue) {
-      data += Utils.pcbToList(pcb)
+    if (queue.isEmpty) {
+      println(s"No processes in Ready Queue")
+    } else {
+      println("Ready Queue")
+      var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
+      data += ArrayBuffer("PID", "Cyl.", "Mem", "file", "length", "cpu time", "tau", "time rem.", "avg burst time")
+      for (pcb <- queue) {
+        data += Utils.pcbToList(pcb)
+      }
+      println(Utils.Tabulator.format(data))
     }
-    println(Utils.Tabulator.format(data))
   }
 }

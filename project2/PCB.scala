@@ -11,25 +11,27 @@ class PCB {
 
   var fileName: String = ""
 
-  var fileSize: Int = 0
+  var fileSize: Float = 0.0f
 
   var cylinder: Int = 0
 
   var tau: Float = 0.0f
 
-  var timeSpentInCPU: Float = 0.0f
+  var cpuTime: Float = 0.0f
 
-  var timeLeftInCPU: Float = 0.0f
+  var tauLeft: Float = 0.0f
 
-  var bursts: ArrayBuffer[Float] = new ArrayBuffer[Float]
+  var bursts: Float = 0.0f
+
+  var burstCount: Int  = 0.0f
 }
 
 class PCBRQOrdering extends Ordering[PCB] {
-  override def compare(x: PCB, y: PCB): Int = y.tau compare x.tau
+  override def compare(x: PCB, y: PCB): Int = x.tauLeft compare y.tauLeft
 }
 
 class PCBDiskOrdering extends Ordering[PCB] {
-  override def compare(x: PCB, y: PCB): Int = y.cylinder compare x.cylinder
+  override def compare(x: PCB, y: PCB): Int = x.cylinder compare y.cylinder
 }
 
 /**
