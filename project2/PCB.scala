@@ -27,14 +27,15 @@ class PCB {
 }
 
 class PCBRQOrdering extends Ordering[PCB] {
-  override def compare(x: PCB, y: PCB): Int = x.tauLeft compare y.tauLeft
+  override def compare(x: PCB, y: PCB): Int = y.tauLeft compare x.tauLeft
 }
 
 class PCBDiskOrdering extends Ordering[PCB] {
-  override def compare(x: PCB, y: PCB): Int = x.cylinder compare y.cylinder
-}
 
-/**
+  override def compare(x: PCB, y: PCB): Int = y.cylinder compare x.cylinder
+
+}
+/*
  *
  * Singleton to hold a PID...
  */

@@ -1,10 +1,8 @@
-import scala.collection.mutable.PriorityQueue
-
 class ReadyQueue {
 
-  import scala.collection.mutable.ArrayBuffer
+  import scala.collection.mutable.PriorityQueue
 
-  var queue = new PriorityQueue[PCB]()(new PCBRQOrdering)
+  val queue = new PriorityQueue[PCB]()(new PCBRQOrdering)
 
 
   def enqueue(pcb: PCB): PCB = {
@@ -17,17 +15,10 @@ class ReadyQueue {
     pcb
   }
 
-  def snapshot() = {
-    if (queue.isEmpty) {
-      println(s"No processes in Ready Queue")
-    } else {
-      println("Ready Queue")
-      var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
-      data += ArrayBuffer("PID", "Cyl.", "Mem", "file", "length", "cpu time", "tau", "time rem.", "avg burst time")
-      for (pcb <- queue) {
-        data += Utils.pcbToList(pcb)
-      }
-      println(Utils.Tabulator.format(data))
-    }
+  def snapshot() {
+    if(queue.isEmpty)
+      println("No processes in Ready Queue!")
+     else
+      Utils.snapshot(queue)
   }
 }

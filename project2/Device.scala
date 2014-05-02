@@ -1,4 +1,3 @@
-
 trait Device {
 
   import scala.collection.mutable
@@ -20,79 +19,74 @@ trait Device {
       println(s"No processes in $name")
     } else {
       println(s"\n$name\n")
-      import scala.collection.mutable.ArrayBuffer
-      var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
-      data += ArrayBuffer("PID", "Cyl.", "Mem", "file", "length", "cpu time", "tau", "time rem.", "avg burst time")
-      for (pcb <- queue) {
-        data += Utils.pcbToList(pcb)
-      }
-      println(Utils.Tabulator.format(data))
+      Utils.snapshot(queue)
     }
   }
 }
 
-class Disk(num: Int, cylinders: Int) extends Device {
+class Disk(num: Int, numCylinders: Int) extends Device {
 
-  import scala.collection.mutable
+  import scala.collection.mutable.ArrayBuffer
 
-  var q1 = new mutable.ArrayBuffer[PCB]
-  var q2 = new mutable.ArrayBuffer[PCB]
+  var q1 = new ArrayBuffer[PCB]
+  var q2 = new ArrayBuffer[PCB]
   val name = s"disk $num"
   var head: Int = 0
   var scanningQ1 = false
   var scanningQ2 = false
   var switchQ = false // true = pq2; false = p1
+  var cylinders = numCylinders
 
 
   override def enqueue(pcb: PCB): PCB = {
-    if (!scanningQ1) q1.append(pcb)
-    else if (!scanningQ2) q2.append(pcb)
+    selectActiveQ()
+    if (!scanningQ1)
+      q1.append(pcb)
+    else if (!scanningQ2)
+      q2.append(pcb)
     pcb
+
   }
 
   override def dequeue(): PCB = {
-    selectActiveQ().remove(0)
+    fscan()
   }
 
-  def selectActiveQ(): mutable.ArrayBuffer[PCB] = {
-    var ret: mutable.ArrayBuffer[PCB] = q1 // initialize to pq1
+  def size(): Int = {
+    selectActiveQ()
+    if (!switchQ)
+      q1.size
+    else
+      q2.size
+  }
+
+  def selectActiveQ() = {
     if (q1.isEmpty && !switchQ) {
-      ret = q1
       scanningQ1 = false
       switchQ = true
     } else if (q2.isEmpty && switchQ) {
-      ret = q2
       scanningQ2 = false
       switchQ = false
     }
     if (!switchQ) {
-      ret = q1
       scanningQ1 = true
     } else if (switchQ) {
-      ret = q2
       scanningQ2 = true
+
     }
-    ret = ret.sorted(new PCBDiskOrdering)
-
-
-
-    ret.to
   }
-
-  def size(): Int = selectActiveQ().size
-
 
   def fscan(): PCB = {
     var found: Boolean = false
     var foundPCB: PCB = null
     var isReverse: Boolean = false
+    selectActiveQ()
     while (!found) {
       if (!isReverse) {
         if (head > cylinders) {
           isReverse = true
           head = cylinders
         }
-
         if (!isReverse) {
           if (switchQ) {
             for (pcb <- q2.sorted(new PCBDiskOrdering)) {
@@ -100,7 +94,6 @@ class Disk(num: Int, cylinders: Int) extends Device {
                 found = true
                 foundPCB = pcb
                 q2 = q2.filterNot(pcb => pcb.cylinder == head)
-                q2(0) = foundPCB
               }
             }
           } else {
@@ -109,7 +102,6 @@ class Disk(num: Int, cylinders: Int) extends Device {
                 found = true
                 foundPCB = pcb
                 q1 = q1.filterNot(pcb => pcb.cylinder == head)
-                q1(0) = foundPCB
               }
             }
           }
@@ -126,7 +118,6 @@ class Disk(num: Int, cylinders: Int) extends Device {
                 found = true
                 foundPCB = pcb
                 q2 = q2.filterNot(pcb => pcb.cylinder == head)
-                q2(0) = foundPCB
               }
             }
           } else {
@@ -135,7 +126,6 @@ class Disk(num: Int, cylinders: Int) extends Device {
                 found = true
                 foundPCB = pcb
                 q1 = q1.filterNot(pcb => pcb.cylinder == head)
-                q1(0) = foundPCB
               }
             }
           }
@@ -146,28 +136,19 @@ class Disk(num: Int, cylinders: Int) extends Device {
     foundPCB
   }
 
-
   override def snapshot(name: String) = {
-    if (queue.isEmpty) {
-      println(s"No processes in $name")
+    println(s"\n$name\n")
+    if (q1.isEmpty) {
+      println(s"No processes in $name Queue 1")
     } else {
-      println(s"\n$name\n")
-      import scala.collection.mutable.ArrayBuffer
-      var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]
-      println("Queue 1")
-      data += ArrayBuffer("PID", "Cyl.", "Mem", "file", "length", "cpu time", "tau", "time rem.", "avg burst time")
-      for (pcb <- queue) {
-        data += Utils.pcbToList(pcb)
-      }
-      println(Utils.Tabulator.format(data))
-
-      println("Queue 2")
-      var data2: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]
-      data += ArrayBuffer("PID", "Cyl.", "Mem", "file", "length", "cpu time", "tau", "time rem.", "avg burst time")
-      for (pcb <- queue) {
-        data2 += Utils.pcbToList(pcb)
-      }
-      println(Utils.Tabulator.format(data2))
+      println("FSCAN Queue 1")
+      Utils.snapshot(q1)
+    }
+    if(q2.isEmpty) {
+      println(s"No processes in $name Queue 2")
+    } else {
+      println("FSCAN Queue 2")
+      Utils.snapshot(q2)
     }
   }
 }
@@ -180,3 +161,4 @@ class Printer(num: Int) extends Device {
 class CDRW(num: Int) extends Device {
   val name = s"cdrw $num"
 }
+

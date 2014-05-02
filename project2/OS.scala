@@ -11,6 +11,10 @@ class OS {
 
   var initialTau: Float = 0
 
+  var totalCPUTime:Float = 0.0f
+
+  var completedProcesses = 0
+
   def sysgen() = {
     println("Welcome to sysgen! I'll be your guide...let's set up the system!")
     print("How many printers: ")
@@ -31,7 +35,7 @@ class OS {
     initialTau = Utils.promptForFloat("Enter initial burst estimate (tau) (greater than 0): ")
 
     print("Enter history parameter (alpha) (float between 0 and 1): ")
-    alpha = Utils.promptForFloat(a = 0.0f, b = 1.0f)
+    alpha = Utils.promptForFloat(a = 0.0f, b = 1.0f,validateRange = true)
 
   }
 
@@ -48,8 +52,11 @@ class OS {
       if (userInput == "A") {
         if (readyqueue.queue.size > 0) {
           val oldPCB: PCB = readyqueue.queue.head
-          var cpuTime = Utils.promptForFloat("How long was this process in the CPU: ", 1.0f, oldPCB.tau)
+          var cpuTime = Utils.promptForFloat("How long was this process in the CPU: ")
           oldPCB.tauLeft -= cpuTime
+          oldPCB.bursts += cpuTime
+          oldPCB.burstCount += 1
+          totalCPUTime += cpuTime
         }
         var pcb = new PCB
         pcb.tau = initialTau
@@ -85,20 +92,20 @@ class OS {
         if (readyqueue.queue.isEmpty) {
           println("Nothing is in the CPU!")
         } else {
-          var timeSpent = Utils.promptForFloat("How long was this process in the CPU for: ")
           var pcb = readyqueue.dequeue()
+          var timeSpent = Utils.promptForFloat("How long was this process in the CPU for: ",1.0f,pcb.tauLeft)
+          totalCPUTime += timeSpent
           pcb.cpuTime += timeSpent
-          import scala.collection.mutable.ArrayBuffer
-          var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
+          pcb.burstCount += 1
+          completedProcesses += 1
           println("Terminating process...")
-          data += ArrayBuffer("total cpu time", "average CPU burst")
-          data += Utils.pcbToList(pcb, terminating = true)
-
-          println(Utils.Tabulator.format(data))
+          println(s"Average burst time: ${pcb.bursts/pcb.burstCount}")
+          println(s"Total process CPU time ${pcb.cpuTime}")
+          println(s"Total System per completed process: ${totalCPUTime/completedProcesses}")
           println(s"Terminated process ${pcb.pid}")
         }
       } else if (userInput == "Q" || userInput == "q") {
-        println("This always happens...was it me??!! I love you anyst ways...")
+        println("This always happens...was it me??!! I love you anyways...")
         done = true
       }
 
@@ -147,28 +154,28 @@ class OS {
 
   def syscall(userInput: String = "") = {
     var tuple: (String, Int) = Utils.extractDeviceInfo(userInput)
-    var deviceNo: Int = tuple._2
+    var deviceNo: Int = tuple._2 - 1
     if (tuple._1 == "c") {
       if (tuple._2 > cdrws.size) {
+        println(deviceNo > cdrws.size)
         println(s"There is no CDRW ${tuple._2} Valid value: 0-${cdrws.size}.")
       } else if (readyqueue.queue.size == 0) {
-        print("Nothing is in the CPU!")
+        println("Nothing is in the CPU!")
       } else {
-        var pcb: PCB = readyqueue.dequeue()
+        var pcb = readyqueue.dequeue()
         pcb = Utils.populatePCB(pcb, alpha = alpha)
-        cdrws(tuple._2).enqueue(pcb)
+        cdrws(tuple._2 - 1).enqueue(pcb)
         println(s"Process ${pcb.pid} has been sent to cdrw $deviceNo")
       }
     } else if (tuple._1 == "d") {
       if (tuple._2 > disks.size) {
         println(s"There is no disk ${tuple._2} Valid value: 0-${disks.size}.")
       } else if (readyqueue.queue.size == 0) {
-        print("Nothing is in the CPU!")
+        println("Nothing is in the CPU!")
       } else {
-        disks(tuple._2).selectActiveQ()
-        var pcb: PCB = readyqueue.dequeue()
-        pcb = Utils.populatePCB(pcb, disk = true, alpha = alpha)
-        disks(tuple._2).enqueue(pcb)
+        var pcb = readyqueue.dequeue()
+        pcb = Utils.populatePCB(pcb, disk = true, alpha = alpha,numCylinders = disks(deviceNo).cylinders)
+        disks(deviceNo).enqueue(pcb)
         println(s"Process ${pcb.pid} has been sent to disk $deviceNo")
       }
 
@@ -176,11 +183,11 @@ class OS {
       if (tuple._2 > printers.size) {
         println(s"There is no printer ${tuple._2} Valid value: 0-${printers.size}.")
       } else if (readyqueue.queue.size == 0) {
-        print("Nothing is in the CPU!")
+        println("Nothing is in the CPU!")
       } else {
-        var pcb: PCB = readyqueue.dequeue()
+        var pcb = readyqueue.dequeue()
         pcb = Utils.populatePCB(pcb, printer = true, alpha = alpha)
-        printers(tuple._2).enqueue(pcb)
+        printers(tuple._2 - 1).enqueue(pcb)
         println(s"Process ${pcb.pid} has been sent to printer $deviceNo")
       }
     }
@@ -192,36 +199,35 @@ class OS {
     if (tuple._1 == "C") {
       if (tuple._2 > cdrws.size) {
         println(s"There is no CDRW ${tuple._2} Valid value: 1-${cdrws.size}.")
-      } else if (cdrws(tuple._2).queue.size == 0) {
-        print(s"There is nothing in CDRW $deviceNo")
+      } else if (cdrws(tuple._2-1).queue.size == 0) {
+        println (s"There is nothing in CDRW $deviceNo")
       } else {
-        var pcb: PCB = cdrws(deviceNo).dequeue()
+        var pcb: PCB = cdrws(deviceNo-1).dequeue()
         readyqueue.enqueue(pcb)
-        println(s"Process ${pcb.pid} is finished in CDRW $deviceNo and " +
+        println(s"Process ${pcb.pid} is finished in CDRW ${tuple._2} and " +
           s"has been moved back to the ready queue.")
       }
     } else if (tuple._1 == "D") {
       if (tuple._2 > disks.size) {
         println(s"There is no disk ${tuple._2} Valid value: 1-${disks.size}.")
-      } else if (disks(tuple._2).queue.size == 0) {
+      } else if (disks(tuple._2-1).size() == 0) {
         print(s"There is nothing in disk $deviceNo")
       } else {
-        disks(deviceNo).selectActiveQ()
-        disks(deviceNo).fscan()
-        var pcb: PCB = disks(deviceNo).dequeue()
+
+        var pcb: PCB = disks(deviceNo-1).dequeue()
         readyqueue.enqueue(pcb)
-        println(s"Process ${pcb.pid} is finished in disk $deviceNo and " +
+        println(s"Process ${pcb.pid} is finished in disk ${tuple._2}} and " +
           s"has been moved back to the ready queue.")
       }
     } else if (tuple._1 == "P") {
       if (tuple._2 > printers.size) {
         println(s"There is no printer ${tuple._2} Valid value: 1-${printers.size}.")
-      } else if (cdrws(tuple._2).queue.size == 0) {
-        print(s"There is nothing in CDRW $deviceNo")
+      } else if (cdrws(tuple._2-1).queue.size == 0) {
+        println(s"There is nothing in CDRW $deviceNo")
       } else {
-        var pcb: PCB = printers(deviceNo).dequeue()
+        var pcb:PCB = printers(deviceNo).dequeue()
         readyqueue.enqueue(pcb)
-        println(s"Process ${pcb.pid} is finished in printer $deviceNo and " +
+        println(s"Process ${pcb.pid} is finished in printer ${tuple._2} and " +
           s"has been moved back to the ready queue.")
       }
     }
@@ -231,7 +237,7 @@ class OS {
 }
 
 object RunThis extends App {
-  var os = new OS
+  val os = new OS
   os.sysgen()
   os.run()
 }

@@ -32,20 +32,18 @@ object Utils {
   def isInterrupt(input: String): Boolean = {
     val regex: scala.util.matching.Regex = """[PDC]{1}\d+""".r
     input match {
-      case regex => true
+      case regex(in) => true
     }
     false
   }
 
   def populatePCB(pcb: PCB, printer: Boolean = false, disk: Boolean = false, numCylinders: Int = 0, alpha: Float): PCB = {
 
-    val timeSpent = promptForFloat("How much time was this process in the CPU in ms (float)",1.0f,pcb.tauLeft)
-    pcb.bursts += pcb.tau
+    val timeSpent = promptForFloat("How much time was this process in the CPU in ms (float)")
+    pcb.bursts += timeSpent
     pcb.cpuTime += timeSpent
     pcb.tau = recalculateTau(alpha = alpha, prevTau = pcb.tau, timeInCPU = timeSpent)
-    pcb.cpuTime = 0
-    pcb.tauLeft = pcb.tau
-    pcb.bursts += pcb.tau
+    pcb.tauLeft = 0
     pcb.burstCount += 1
 
     val fileName: String = readLine("Enter a file name: ")
@@ -68,7 +66,7 @@ object Utils {
     if (disk) {
       print("Enter a cylinder #: ")
       var cylinder = promptForInt()
-      while (!checkRange(cylinder, 0, numCylinders)) {
+      while (!checkRange(cylinder, 1, numCylinders)) {
         print(s"Invalid Cylinder specified Valid range [0,$numCylinders]: ")
         cylinder = promptForInt()
       }
@@ -82,13 +80,10 @@ object Utils {
     input.stripSuffix(" ")
     input.stripPrefix(" ")
     input match {
-      case r"^[AtSQq]{1}|^[pPdDcC]\d+|[rdpc]{1}|[rw]{1}" => true
+      case r"[AtSQq]{1}|[pPdDcC]\d+|[rdpc]{1}|[rw]{1}" => true
       case _ => false
     }
   }
-
-  def checkRange(input: Int, a: Int, b: Int) = input >= a && input <= b
-
 
   def promptForFloat(msg: String = "", a: Float = 0.0f, b: Float = 0.0f,validateRange: Boolean = false): Float = {
     var ret = 0.0f
@@ -98,16 +93,20 @@ object Utils {
         if (msg.length > 0) print(msg)
         ret = readFloat()
         if(validateRange) {
-          if (checkRange(ret, 0.0f, 1.0f)) {
+          if (checkRange(ret, a, b)) {
             valid = true
+          } else {
+            valid = false
           }
-          if (!valid) {
-            print(s"Not valid -- must be float between $a and $b: Try again: ")
-          }
+        } else {
+          valid = true
         }
 
       } catch {
-        case ex: NumberFormatException => print(s"Not valid -- must be float between $a and $b: Try again: ")
+        case ex: NumberFormatException => println(s"Not valid -- must be float between $a and $b: Try again: ")
+      }
+      if (!valid) {
+        println(s"Not valid -- must be float between $a and $b: Try again: ")
       }
     } while (!valid)
     ret
@@ -116,26 +115,25 @@ object Utils {
 
   def checkRange(input: Float, a: Float, b: Float): Boolean = input >= a && input <= b
 
+
+
   def promptForInt(msg: String = ""): Int = {
     var ret = 0
     var valid = false
+    if (msg.length > 0) print(msg)
     do {
       try {
-        if (msg.length > 0) print(msg)
         ret = readInt()
-        if (ret > 0) {
-          valid = true
-        }
-        if (!valid) {
-          print("Not valid -- must be a positive integer -- Try again: ")
-        }
+        if(ret >0) valid = true
       } catch {
-        case ex: NumberFormatException => print("Not valid -- must be a positive integer -- Try again: ")
+        case _: NumberFormatException => valid = false
+      }
+      if (!valid) {
+        println("\nNot valid! Must be greater than 0")
       }
     } while (!valid)
     ret
   }
-
   def recalculateTau(prevTau: Float, alpha: Float, timeInCPU: Float): Float = alpha * prevTau + (1 - alpha) * timeInCPU
 
   def generateDisks(noOfDisk: Int): ArrayBuffer[Disk] = {
@@ -164,19 +162,20 @@ object Utils {
     }
   }
 
-  def pcbToList(pcb: PCB, terminating: Boolean = false): ArrayBuffer[Any] = {
-    val row = new ArrayBuffer[Any]()
-    if (terminating) {
-      row += pcb.cpuTime += (pcb.bursts / pcb.burstCount)
-    } else {
-      row += pcb.pid.toString() += pcb.cylinder += pcb.memoryStartRegion.toString() += pcb.fileName += pcb.fileSize.toString() += pcb.cpuTime.toString() += pcb.tau.toString() += pcb.tauLeft.toString() += pcb.cpuTime += (pcb.bursts / pcb.burstCount)
-    }
+  def snapshot(queue:Iterable[PCB]) = {
+      var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
+      data.append(ArrayBuffer("PID", "Cyl.", "Mem", "file", "length", "cpu time", "tau", "time rem.", "avg burst time"))
+      for (pcb <- queue) {
+        val averageBursts = if(pcb.burstCount > 0) pcb.bursts / pcb.burstCount else 0.0f
+        data += ArrayBuffer(pcb.pid, pcb.cylinder, pcb.memoryStartRegion, pcb.fileName, pcb.fileSize, pcb.cpuTime, pcb.tau, pcb.tauLeft,averageBursts)
+      }
+      println(Tabulator.format(data))
   }
 
+  // taken from somewhere -- I don't remember where -- point is I didn't write it but I don't know where I got it.
   implicit class Regex(sc: StringContext) {
     def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
-
 
   // taken in whole from http://stackoverflow.com/a/7542476/1508101
   object Tabulator {
@@ -206,6 +205,7 @@ object Utils {
       "-" * _
     } mkString("+", "+", "+")
   }
+  //--------------------------------------------------------------------------------------------------------------------
 
 }
 

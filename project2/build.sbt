@@ -10,4 +10,4 @@ name := "project2"
 
 version := "0.1"
 
-scalacOptions in compile ++= Seq("-optimize", "-unchecked", "-Xlint", "-feature")
+scalacOptions in compile ++= Seq("-unchecked", "-Xlint", "-feature")
