@@ -29,14 +29,6 @@ object Utils {
 
   }
 
-  def isInterrupt(input: String): Boolean = {
-    val regex: scala.util.matching.Regex = """[PDC]{1}\d+""".r
-    input match {
-      case regex(in) => true
-    }
-    false
-  }
-
   def populatePCB(pcb: PCB, printer: Boolean = false, disk: Boolean = false, numCylinders: Int = 0, alpha: Float): PCB = {
 
     val timeSpent = promptForFloat("How much time was this process in the CPU in ms (float)")
@@ -157,7 +149,7 @@ object Utils {
 
   def checkInterruptSyscall(input: String = "") = {
     input match {
-      case r"[PDCpdc]{1}\d" => true
+      case r"[PDCpdc]{1}\d+" => true
       case _ => false
     }
   }

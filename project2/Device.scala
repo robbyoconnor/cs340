@@ -1,7 +1,8 @@
-trait Device {
+class Device(var deviceName: String = "") {
 
   import scala.collection.mutable
 
+  var name = deviceName
   var queue = new mutable.Queue[PCB]
 
   def enqueue(pcb: PCB): PCB = {
@@ -10,7 +11,7 @@ trait Device {
   }
 
   def dequeue(): PCB = {
-    val pcb = queue.dequeue()
+    var pcb = queue.dequeue()
     pcb
   }
 
@@ -28,9 +29,9 @@ class Disk(num: Int, numCylinders: Int) extends Device {
 
   import scala.collection.mutable.ArrayBuffer
 
+  name = s"disk $num"
   var q1 = new ArrayBuffer[PCB]
   var q2 = new ArrayBuffer[PCB]
-  val name = s"disk $num"
   var head: Int = 0
   var scanningQ1 = false
   var scanningQ2 = false
@@ -155,10 +156,10 @@ class Disk(num: Int, numCylinders: Int) extends Device {
 
 
 class Printer(num: Int) extends Device {
-  val name = s"printer $num"
+  name = s"printer $num"
 }
 
 class CDRW(num: Int) extends Device {
-  val name = s"cdrw $num"
+  name = s"cdrw $num"
 }
 
