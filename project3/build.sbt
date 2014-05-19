@@ -6,7 +6,7 @@ resolvers ++= (if (scalaVersion.value.endsWith("SNAPSHOT")) List(Resolver.sonaty
 
 organization := "org.scala-lang.modules"
 
-name := "project2"
+name := "project3"
 
 version := "0.1"
 

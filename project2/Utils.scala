@@ -59,7 +59,7 @@ object Utils {
       print("Enter a cylinder #: ")
       var cylinder = promptForInt()
       while (!checkRange(cylinder, 1, numCylinders)) {
-        print(s"Invalid Cylinder specified Valid range [0,$numCylinders]: ")
+        print(s"Invalid Cylinder specified Valid range [1,$numCylinders]: ")
         cylinder = promptForInt()
       }
       pcb.cylinder = cylinder
