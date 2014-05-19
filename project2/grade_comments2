@@ -1,0 +1,175 @@
+OK ....
+
+You are miscalculating the average CPU burst. A burst does not end with an interrupt. PID0 below has used 6ms in its first burst:
+++++++++++++++++++++++++++++++++++++
+To kill a process, type 't'
+To quit me, type 'q' or 'Q'
+With the exception of 'A' and 't'
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+Added process 0
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 1
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 2
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 3
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 4
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 5
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 6
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: r
++---+----+---+----+------+--------+----+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time| tau|time rem.|avg burst time|
++---+----+---+----+------+--------+----+---------+--------------+
+|  0|   0|  0|    |   0.0|     0.0|10.0|      4.0|           1.0|
+|  1|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  2|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  3|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  4|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  5|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  6|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
++---+----+---+----+------+--------+----+---------+--------------+
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+++++++++++++++++++++++++++++++++++++
+
+Tau for the above PID0 should be .6*10 + .4*19 = 13.6, you show it as 11.2: (CPU time should be 13 + 1*6 = 19):
+++++++++++++++++++++++++++++
+[A,S,t,p#,d#,c#,P#,D#,C#]:p1
+How much time was this process in the CPU in ms (float)13
+Enter a file name: 13
+How big is the file: 19
+Enter a memory start region (must be an integer): 13
+Process 0 has been sent to disk printer 1
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: p
+
+printer 1
+
++---+----+---+----+------+--------+----+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time| tau|time rem.|avg burst time|
++---+----+---+----+------+--------+----+---------+--------------+
+|  0|   0| 13|  13|  19.0|    13.0|11.2|      0.0|     2.7142856|
++---+----+---+----+------+--------+----+---------+--------------+
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+++++++++++++++++++++++++++++
+
+And then a crash on the first P1:
+++++++++++++++++++++++++++++++
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: p
+
+printer 1
+
++---+----+---+----+------+--------+--------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|     tau|time rem.|avg burst time|
++---+----+---+----+------+--------+--------+---------+--------------+
+|  0|   0| 13|  13|  19.0|    13.0|    11.2|      0.0|     2.7142856|
+|  6|   0|200| 200| 200.0|   200.0|85.99999|      0.0|         200.0|
+|  5|   0|  1|   1|   1.0|     1.0|     6.4|      0.0|           1.0|
++---+----+---+----+------+--------+--------+---------+--------------+
+[A,S,t,p#,d#,c#,P#,D#,C#]:P1
+How long was this process in the CPU: 1
+[error] (run-main-0) java.util.NoSuchElementException: queue empty
+java.util.NoSuchElementException: queue empty
+    at scala.collection.mutable.Queue.dequeue(Queue.scala:66)
+    at Device.dequeue(Device.scala:14)
+    at OS.movePCB(OS.scala:237)
+    at OS.interrupt(OS.scala:207)
+    at OS.run(OS.scala:78)
+    at RunThis$.delayedEndpoint$RunThis$1(OS.scala:250)
+    at RunThis$delayedInit$body.apply(OS.scala:247)
+    at scala.Function0$class.apply$mcV$sp(Function0.scala:40)
+    at scala.runtime.AbstractFunction0.apply$mcV$sp(AbstractFunction0.scala:12)
+    at scala.App$$anonfun$main$1.apply(App.scala:76)
+    at scala.App$$anonfun$main$1.apply(App.scala:76)
+    at scala.collection.immutable.List.foreach(List.scala:383)
+    at scala.collection.generic.TraversableForwarder$class.foreach(TraversableForwarder.scala:35)
+    at scala.App$class.main(App.scala:76)
+    at RunThis$.main(OS.scala:247)
+    at RunThis.main(OS.scala)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke(Method.java:622)
+[trace] Stack trace suppressed: run last compile:run for the full output.
+java.lang.RuntimeException: Nonzero exit code: 1
+    at scala.sys.package$.error(package.scala:27)
+[trace] Stack trace suppressed: run last compile:run for the full output.
+[error] (compile:run) Nonzero exit code: 1
+[error] Total time: 521 s, completed May 4, 2014 7:59:12 PM
+>
+++++++++++++++++++++++++++++++
+
+Trying again, to test the disk: (FSCAN):
+
+I get a crash after the second "D1" on Queue 2. The queue is not displayed in sorted order, and I have no reason to believe it would be dequeued in the correct order if I could dequeue it:
++++++++++++++++++++++++++++++
+Process 8 has been sent to disk disk 1
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: d
+
+disk 1
+
+FSCAN Queue 1
++---+----+---+----+------+--------+--------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|     tau|time rem.|avg burst time|
++---+----+---+----+------+--------+--------+---------+--------------+
+|  8| 100|100| 100|   0.0|   200.0|67.59999|      0.0|          67.0|
++---+----+---+----+------+--------+--------+---------+--------------+
+FSCAN Queue 2
++---+----+---+----+------+--------+---------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|      tau|time rem.|avg burst time|
++---+----+---+----+------+--------+---------+---------+--------------+
+|  9|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
+|  7| 299|299| 299|   0.0|   299.0|125.59999|      0.0|         299.0|
+|  6| 100|100| 100|   0.0|   100.0|45.999996|      0.0|         100.0|
++---+----+---+----+------+--------+---------+---------+--------------+
+
+disk 2
+
+No processes in disk 2 Queue 1
+No processes in disk 2 Queue 2
+[A,S,t,p#,d#,c#,P#,D#,C#]:D1
+How long was this process in the CPU: 1
+Process 7 is finished in disk 1 and has been moved back to the ready queue.
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: d
+
+disk 1
+
+FSCAN Queue 1
++---+----+---+----+------+--------+--------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|     tau|time rem.|avg burst time|
++---+----+---+----+------+--------+--------+---------+--------------+
+|  8| 100|100| 100|   0.0|   200.0|67.59999|      0.0|          67.0|
++---+----+---+----+------+--------+--------+---------+--------------+
+FSCAN Queue 2
++---+----+---+----+------+--------+---------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|      tau|time rem.|avg burst time|
++---+----+---+----+------+--------+---------+---------+--------------+
+|  9|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
+|  6| 100|100| 100|   0.0|   100.0|45.999996|      0.0|         100.0|
++---+----+---+----+------+--------+---------+---------+--------------+
+
+disk 2
+
+No processes in disk 2 Queue 1
+No processes in disk 2 Queue 2
+[A,S,t,p#,d#,c#,P#,D#,C#]:D1
+How long was this process in the CPU: 1
+S
+d
+
++++++++++++++++++++++++++++++
+
+So, tau is incorrect, the average burst is incorrect, I can't dequeue from a print queue, and I can't really test the disk queue scheduler. I think this is worse than the first attempt, certainly by the time 2 more points are lost it is below a 5, so no grade change.
+. 

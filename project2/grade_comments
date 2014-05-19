@@ -1,0 +1,201 @@
+
+You are miscalculating the average burst time. A burst does NOT end with an interrupt, so nothing has yet finished a burst. PID 0's average could be listed as 0, or 8, or NAN, but certainly not 1:
+========================
+Added process 0
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 1
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 2
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 3
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 4
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 5
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 6
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 7
+[A,S,t,p#,d#,c#,P#,D#,C#]:A
+How long was this process in the CPU: 1
+Added process 8
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: r
++---+----+---+----+------+--------+----+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time| tau|time rem.|avg burst time|
++---+----+---+----+------+--------+----+---------+--------------+
+|  0|   0|  0|    |   0.0|     0.0|10.0|      2.0|           1.0|
+|  1|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  2|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  3|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  4|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  5|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  6|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  7|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
+|  8|   0|  0|    |   0.0|     0.0|10.0|     10.0|           0.0|
++---+----+---+----+------+--------+----+---------+--------------+
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+========================
+
+Below continues from above. Note that PID 0 should have a CPU time of 20, not 12, and this means tau is also incorrect (it should be .6*10 + .4*20 = 14):
+=========================
+[A,S,t,p#,d#,c#,P#,D#,C#]:p1
+How much time was this process in the CPU in ms (float)12
+Enter a file name: 12
+How big is the file: 12
+Enter a memory start region (must be an integer): 12
+Process 0 has been sent to disk printer 1
+[A,S,t,p#,d#,c#,P#,D#,C#]:p1
+How much time was this process in the CPU in ms (float)1
+Enter a file name: 1
+How big is the file: 1
+Enter a memory start region (must be an integer): 1
+Process 8 has been sent to disk printer 1
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: p
+
+printer 1
+
++---+----+---+----+------+--------+---------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|      tau|time rem.|avg burst time|
++---+----+---+----+------+--------+---------+---------+--------------+
+|  0|   0| 12|  12|  12.0|    12.0|10.799999|      0.0|     2.2222223|
+|  8|   0|  1|   1|   1.0|     1.0|      6.4|      0.0|           1.0|
++---+----+---+----+------+--------+---------+---------+--------------+
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+=========================
+
+One process has completed. It has used 12 ms. How can the total system per completed process be 20? How can one burst with a time of 12 come to an average of 0?
+==============================
+[A,S,t,p#,d#,c#,P#,D#,C#]:t
+How long was this process in the CPU for: 12
+Terminating process...
+Average burst time: 0.0
+Total process CPU time 12.0
+Total System per completed process: 20.0
+Terminated process 7
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+==============================
+
+FSCAN:
+You are not displaying the second queue in sorted order, and I can not tell if you dequeue in the correct order as it crashes on the second "D1" below:
+==============================
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: d
+
+disk 1
+
+FSCAN Queue 1
++---+----+---+----+------+--------+---------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|      tau|time rem.|avg burst time|
++---+----+---+----+------+--------+---------+---------+--------------+
+|  0| 100|100| 100|   0.0|   100.0|45.999996|      0.0|          10.0|
++---+----+---+----+------+--------+---------+---------+--------------+
+FSCAN Queue 2
++---+----+---+----+------+--------+---------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|      tau|time rem.|avg burst time|
++---+----+---+----+------+--------+---------+---------+--------------+
+| 10|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
+|  9| 100|100| 100|   0.0|   100.0|45.999996|      0.0|         100.0|
+|  8|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
+|  7| 200|200| 200|   0.0|   200.0| 85.99999|      0.0|         200.0|
++---+----+---+----+------+--------+---------+---------+--------------+
+
+disk 2
+
+No processes in disk 2 Queue 1
+No processes in disk 2 Queue 2
+[A,S,t,p#,d#,c#,P#,D#,C#]:D1
+How long was this process in the CPU: 1
+Process 0 is finished in disk 1 and has been moved back to the ready queue.
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: d
+
+disk 1
+
+No processes in disk 1 Queue 1
+FSCAN Queue 2
++---+----+---+----+------+--------+---------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|      tau|time rem.|avg burst time|
++---+----+---+----+------+--------+---------+---------+--------------+
+| 10|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
+|  9| 100|100| 100|   0.0|   100.0|45.999996|      0.0|         100.0|
+|  8|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
+|  7| 200|200| 200|   0.0|   200.0| 85.99999|      0.0|         200.0|
++---+----+---+----+------+--------+---------+---------+--------------+
+
+disk 2
+
+No processes in disk 2 Queue 1
+No processes in disk 2 Queue 2
+[A,S,t,p#,d#,c#,P#,D#,C#]:D1
+How long was this process in the CPU: 1
+Process 7 is finished in disk 1 and has been moved back to the ready queue.
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c]: d
+
+disk 1
+
+No processes in disk 1 Queue 1
+FSCAN Queue 2
++---+----+---+----+------+--------+---------+---------+--------------+
+|PID|Cyl.|Mem|file|length|cpu time|      tau|time rem.|avg burst time|
++---+----+---+----+------+--------+---------+---------+--------------+
+| 10|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
+|  9| 100|100| 100|   0.0|   100.0|45.999996|      0.0|         100.0|
+|  8|  50| 50|  50|   0.0|    50.0|25.999998|      0.0|          50.0|
++---+----+---+----+------+--------+---------+---------+--------------+
+
+disk 2
+
+No processes in disk 2 Queue 1
+No processes in disk 2 Queue 2
+[A,S,t,p#,d#,c#,P#,D#,C#]:D1
+How long was this process in the CPU: 1
+S
+==============================
+
+
+Crash on dequeue from an empty queue!:
++++++++++++++++++++++++++++++++[A,S,t,p#,d#,c#,P#,D#,C#]:P1
+How long was this process in the CPU: 1
+[error] (run-main-0) java.util.NoSuchElementException: queue empty
+java.util.NoSuchElementException: queue empty
+    at scala.collection.mutable.Queue.dequeue(Queue.scala:66)
+    at Device.dequeue(Device.scala:14)
+    at OS.movePCB(OS.scala:237)
+    at OS.interrupt(OS.scala:207)
+    at OS.run(OS.scala:78)
+    at RunThis$.delayedEndpoint$RunThis$1(OS.scala:250)
+    at RunThis$delayedInit$body.apply(OS.scala:247)
+    at scala.Function0$class.apply$mcV$sp(Function0.scala:40)
+    at scala.runtime.AbstractFunction0.apply$mcV$sp(AbstractFunction0.scala:12)
+    at scala.App$$anonfun$main$1.apply(App.scala:76)
+    at scala.App$$anonfun$main$1.apply(App.scala:76)
+    at scala.collection.immutable.List.foreach(List.scala:383)
+    at scala.collection.generic.TraversableForwarder$class.foreach(TraversableForwarder.scala:35)
+    at scala.App$class.main(App.scala:76)
+    at RunThis$.main(OS.scala:247)
+    at RunThis.main(OS.scala)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke(Method.java:622)
+[trace] Stack trace suppressed: run last compile:run for the full output.
+java.lang.RuntimeException: Nonzero exit code: 1
+    at scala.sys.package$.error(package.scala:27)
+[trace] Stack trace suppressed: run last compile:run for the full output.
+[error] (compile:run) Nonzero exit code: 1
+[error] Total time: 704 s, completed May 4, 2014 6:12:00 PM
++++++++++++++++++++++++++++++++
+
+Do you ever critically evaluate your own code? As Lady Ada will remind you, until you've actually debugged it you have no idea if your program is correct.
+
+"end of burst" is misunderstood, leading to incorrect stats as well as an error in SJF. FSCAN is at least partially correct, but I can't say how partially correct. The is better than before, had this been the first time it would be a 7, but 7-2=5. 
