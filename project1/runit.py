@@ -174,7 +174,7 @@ class runit(object):
                 print("There is nothing in printer %s!" % user_input[1:])
                 return
             else:
-                pcb = self.printers[int(user_input[1:]) - 1].pop()
+                pcb = self.printers[int(user_input[1:]) - 1].popleft()
                 self.readyQueue.add_pcb_to_readyqueue(pcb)
                 print(
                     "Process %s is finished in Printer %s and has been moved back to the ready queue." % (pcb.pid, user_input[1:]))
@@ -187,7 +187,7 @@ class runit(object):
                 print("There is nothing in disk %s!" % user_input[1:])
                 return
             else:
-                pcb = self.disks[int(user_input[1:]) - 1].pop()
+                pcb = self.disks[int(user_input[1:]) - 1].popleft()
                 self.readyQueue.add_pcb_to_readyqueue(pcb)
                 print(
                     "Process %s is finished in disk %s and has been moved back to the ready queue." % (pcb.pid, user_input[1:]))
@@ -200,7 +200,7 @@ class runit(object):
                 print("There is nothing in cdrw %s!" % user_input[1:])
                 return
             else:
-                pcb = self.cdrws[int(user_input[1:]) - 1].pop()
+                pcb = self.cdrws[int(user_input[1:]) - 1].popleft()
                 self.readyQueue.add_pcb_to_readyqueue(pcb)
                 print(
                     "Process %s is finished in CDRW %s and has been moved back to the ready queue." % (pcb.pid, user_input[1:]))

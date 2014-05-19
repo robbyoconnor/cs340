@@ -17,7 +17,7 @@ class ReadyQueue(object):
         if self.queue_len() == 0:
             print("The CPU is currently empty -- cannot proceed")
         else:
-            return self.queue.pop()
+            return self.queue.popleft()
 
     def print_readyqueue(self):
         print("Ready Queue\n")
