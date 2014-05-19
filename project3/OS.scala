@@ -31,12 +31,12 @@ class OS {
     initialTau = Utils.promptForFloat("Enter initial burst estimate (tau) (greater than 0): ")
     alpha = Utils.promptForFloat(msg = "Enter history parameter (alpha) (float between 0 and 1): ", a = 0.0f, b = 1.0f, validateRange = true)
     totalMemory = Utils.promptForInt("Enter the total amount of memory (in words as an integer greater than 0): ")
+    holes += new Block(1,totalMemory)
   }
 
   def run() = {
     help()
-    var done = false
-    holes += new Block(1, totalMemory)
+    var done = false    
     do {
       var userInput: String = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
       while (!Utils.validateInput(userInput)) {
