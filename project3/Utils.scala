@@ -157,7 +157,7 @@ object Utils {
     }
   }
 
-  def snapshot(queue: Iterable[PCB], mem: Boolean = false) = {
+  def snapshot(queue: Iterable[PCB]) = {
     var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
     data.append(ArrayBuffer("PID", "Cyl.", "file", "length", "cpuTime", "tau", "timeRem.", "avgBurst", "base", "limit", "physAddr."))
     for (pcb <- queue) {
@@ -184,7 +184,7 @@ object Utils {
         data2 += ArrayBuffer(block.pid, base, limit)
       }
     }
-    println(s"Holes\n${ if(holes.size >0) Tabulator.format(data) else "No Holes."}\nMemory\n${if (!mem.isEmpty) Tabulator.format(data2) else "Empty"}")
+    println(s"Job Pool\n\n${os.jobpool.snapshot}\n\nHoles\n\n${ if(holes.size >0) Tabulator.format(data) else "No Holes."}\nMemory\n${if (!mem.isEmpty) Tabulator.format(data2) else "Empty"}")
   }
 
   // taken from somewhere -- I don't remember where -- point is I didn't write it but I don't know where I got it.

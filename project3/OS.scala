@@ -21,7 +21,7 @@ class OS {
   var totalMemory: Int = 0
   var totalFreeMemory: Int = 0
 
-  def sysgen() = {
+  def sysgen {
     println("Welcome to sysgen! I'll be your guide...let's set up the system!")
     var printerCnt = Utils.promptForInt("How many printers: ")
     var disk_cnt = Utils.promptForInt("How many disks: ")
@@ -35,8 +35,8 @@ class OS {
     holes += new Block(1, totalMemory)
   }
 
-  def run() = {
-    help()
+  def run {
+    help
     var done = false
     do {
       var userInput: String = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
@@ -48,7 +48,7 @@ class OS {
       totalFreeMemory = holes.map(_.limit).sum
       processJobPool
       if (userInput == "A") {
-        interruptRQ()
+        interruptRQ
         var size = Utils.promptForInt("How big is this process (in words, greater than 0): ")
         if (size > totalMemory) {
           println(s"process size $size words has been rejected since it exceeds $totalMemory words")
@@ -58,13 +58,15 @@ class OS {
         pcb.tauLeft = initialTau
         pcb.limit = size
         if (size < totalMemory && size > totalFreeMemory) {
-          println(s"Process ${pcb.pid} is in the job pool awaiting free space.")
+          jobpool.enqueue(pcb)
+          println(s"Process ${pcb.pid} is in the job pool awaiting free space.")          
         } else {
           var _pcb = allocate(pcb.limit, pcb)
           if (_pcb.isDefined) {
             memory += _pcb.get
             readyqueue.enqueue(_pcb.get)
             totalFreeMemory -= size
+            println(s"Process ${pcb.pid} has been allocated ${pcb.limit} words and is in the ready queue!")
           }
         }
       } else if (userInput == "S") {
@@ -97,7 +99,7 @@ class OS {
         if (readyqueue.queue.isEmpty) {
           println("Nothing is in the CPU!")
         } else {
-          var pcb = readyqueue.dequeue()
+          var pcb = readyqueue.dequeue
           var timeSpent = Utils.promptForFloat("How long was this process in the CPU for: ", 1.0f, pcb.tauLeft)
           totalCPUTime += timeSpent
           pcb.cpuTime += timeSpent
@@ -120,7 +122,7 @@ class OS {
 
   }
 
-  def help() = {
+  def help = {
     println(s"Welcome to the OS...Here's how it works: ")
     println(s"'A' will create a new process (exclude quotes).")
     println(s"Lower case letters are system calls. e.g., p1")
@@ -158,7 +160,7 @@ class OS {
       println(s"Free Memory: $totalFreeMemory  / $totalMemory")
       Utils.snapshot(holes, memory, this)
     } else if (readyQ) {
-      readyqueue.snapshot()
+      readyqueue.snapshot
     }
   }
 
@@ -203,7 +205,7 @@ class OS {
       } else if (cdrws(tuple._2 - 1).queue.size == 0) {
         println(s"There is nothing in CDRW $deviceNo")
       } else {
-        interruptRQ()
+        interruptRQ
         movePCB(cdrws(tuple._2 - 1), fromRQ = false)
       }
     } else if (tuple._1 == "D") {
@@ -212,7 +214,7 @@ class OS {
       } else if (disks(tuple._2 - 1).size() == 0) {
         print(s"There is nothing in disk $deviceNo")
       } else {
-        interruptRQ()
+        interruptRQ
         movePCB(disks(tuple._2 - 1), fromRQ = false)
       }
     } else if (tuple._1 == "P") {
@@ -221,13 +223,13 @@ class OS {
       } else if (printers(tuple._2 - 1).queue.size == 0) {
         println(s"There is nothing in printer $deviceNo")
       } else {
-        interruptRQ()
+        interruptRQ
         movePCB(printers(tuple._2 - 1), fromRQ = false)
       }
     }
   }
 
-  def interruptRQ() {
+  def interruptRQ {
     if (readyqueue.queue.size > 0) {
       val oldPCB: PCB = readyqueue.queue.head
       var cpuTime = Utils.promptForFloat("How long was this process in the CPU: ")
@@ -252,7 +254,7 @@ class OS {
       if (pcb == null) {
         return
       } else {
-        readyqueue.dequeue()
+        readyqueue.dequeue
       }
       device.enqueue(pcb)
       println(s"Process ${pcb.pid} has been sent to disk ${device.name}")
@@ -291,24 +293,28 @@ class OS {
     return Some(pcb)
   }
 
-  def compactMemory() {
-    var pcb: Option[PCB] = None
-    for (i <- 0 until memory.length - 1; if i > 0) {
-      val tmp = memory(i); memory(i) = memory(i + 1); memory(i + 1) = tmp
-    }
-
-    if (holes.length > 1 && memory.map(_.limit).sum <= totalMemory) {      
+  def compactMemory {
+    var pcb: Option[PCB] = None    
+    if(!memory.isEmpty)
+      memory(0).base = 1
+    for (i <- 0 until memory.length - 1 if i >0) {                  
+    	memory(i+1).base = memory(i).base+memory(i).limit
+    }    
+    if(holes.length > 1 && memory.map(_.limit).sum <= totalMemory) {      
       holes.clear()
-      holes += new Block(memory(memory.length-1).base+memory(memory.length-1).limit,totalFreeMemory)
+      holes += new Block(memory(memory.length-1).base+memory(memory.length-1).limit,totalFreeMemory)      
     }
   }
 
-  def processJobPool() {
+  def processJobPool {
     for (pcb <- jobpool.queue) {
       val _pcb = allocate(pcb.limit, pcb)
       if (_pcb.isDefined) {
-        readyqueue.enqueue(_pcb.get)
+        memory += _pcb.get
+        readyqueue.enqueue(_pcb.get)        
         jobpool.queue -= pcb
+        totalFreeMemory = if(holes.isEmpty) 0 else holes.map(_.limit).sum
+        println(s"Process ${pcb.pid} of size ${pcb.limit} words has been moved from the job pool to the Ready Queue!")        
       }
     }
   }
@@ -317,13 +323,13 @@ class OS {
     for (process <- memory)
       if (process == pcb) memory -= process
     holes += new Block(base, limit)
-    totalFreeMemory += holes.map(_.limit).sum
+    totalFreeMemory = holes.map(_.limit).sum
     compactMemory
   }
 }
 
 object RunThis extends App {
   val os = new OS
-  os.sysgen()
-  os.run()
+  os.sysgen
+  os.run
 }
