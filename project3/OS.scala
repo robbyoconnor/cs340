@@ -19,6 +19,7 @@ class OS {
   var completedProcesses = 0
 
   var totalMemory: Int = 0
+  var totalFreeMemory: Int = 0
 
   def sysgen() = {
     println("Welcome to sysgen! I'll be your guide...let's set up the system!")
@@ -31,12 +32,12 @@ class OS {
     initialTau = Utils.promptForFloat("Enter initial burst estimate (tau) (greater than 0): ")
     alpha = Utils.promptForFloat(msg = "Enter history parameter (alpha) (float between 0 and 1): ", a = 0.0f, b = 1.0f, validateRange = true)
     totalMemory = Utils.promptForInt("Enter the total amount of memory (in words as an integer greater than 0): ")
-    holes += new Block(1,totalMemory)
+    holes += new Block(1, totalMemory)
   }
 
   def run() = {
     help()
-    var done = false    
+    var done = false
     do {
       var userInput: String = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
       while (!Utils.validateInput(userInput)) {
@@ -44,8 +45,8 @@ class OS {
         userInput = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
 
       }
-
-      processJobPool()
+      totalFreeMemory = holes.map(_.limit).sum
+      processJobPool
       if (userInput == "A") {
         interruptRQ()
         var size = Utils.promptForInt("How big is this process (in words, greater than 0): ")
@@ -56,13 +57,14 @@ class OS {
         pcb.tau = initialTau
         pcb.tauLeft = initialTau
         pcb.limit = size
-        if (size < totalMemory && size > holes.map(_.size).sum) {
+        if (size < totalMemory && size > totalFreeMemory) {
           println(s"Process ${pcb.pid} is in the job pool awaiting free space.")
         } else {
           var _pcb = allocate(pcb.limit, pcb)
           if (_pcb.isDefined) {
             memory += _pcb.get
             readyqueue.enqueue(_pcb.get)
+            totalFreeMemory -= size
           }
         }
       } else if (userInput == "S") {
@@ -153,7 +155,7 @@ class OS {
         num = num + 1
       }
     } else if (mem) {
-      println(s"Memory Usage: ${holes.map(_.limit).sum} / $totalMemory")
+      println(s"Free Memory: $totalFreeMemory  / $totalMemory")
       Utils.snapshot(holes, memory, this)
     } else if (readyQ) {
       readyqueue.snapshot()
@@ -262,29 +264,43 @@ class OS {
     }
   }
   def largestFit(size: Int): Int = {
-    var largestfit: Int = -1    
-    for(i <- 0 to holes.size-1) {      
-      if(holes(i).size >= size) largestfit = i 
+    var largestfit: Int = -1
+    for (i <- 0 to holes.size - 1) {
+      if (holes(i).size >= size && totalFreeMemory > 0) largestfit = i
     }
     return largestfit
   }
-  
+
   def allocate(size: Int, pcb: PCB): Option[PCB] = {
-	var fit = largestFit(size)
-	if(fit < 0) 
-	  return None
-    var block = holes(fit)    
+    var fit = largestFit(size)
+    if (fit < 0)
+      return None
+    var block = holes(fit)
     if (block.size == size) {
-       holes.remove(fit)
-        pcb.base = block.base
-          pcb.limit = pcb.base + size
+      holes.remove(fit)
+      pcb.base = block.base
     } else if (block.size > size) {
-          pcb.base = block.base
-          pcb.limit = pcb.base + size
-          block.base = pcb.limit + 1
-        }
-        return Some(pcb)          
-    
+      pcb.base = block.base
+      if (block.limit - size > 0) {
+        block.base = pcb.base + pcb.limit
+        block.limit -= size
+      } else {
+        holes -= block
+      }
+    }
+    return Some(pcb)
+  }
+
+  def compactMemory() {
+    var pcb: Option[PCB] = None
+    for (i <- 0 until memory.length - 1; if i > 0) {
+      val tmp = memory(i); memory(i) = memory(i + 1); memory(i + 1) = tmp
+    }
+
+    if (holes.length > 1 && memory.map(_.limit).sum <= totalMemory) {      
+      holes.clear()
+      holes += new Block(memory(memory.length-1).base+memory(memory.length-1).limit,totalFreeMemory)
+    }
   }
 
   def processJobPool() {
@@ -301,6 +317,8 @@ class OS {
     for (process <- memory)
       if (process == pcb) memory -= process
     holes += new Block(base, limit)
+    totalFreeMemory += holes.map(_.limit).sum
+    compactMemory
   }
 }
 
