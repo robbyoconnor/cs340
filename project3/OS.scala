@@ -329,8 +329,7 @@ class OS {
     }
   }
   def processJobPool {    
-    for (job <- jobpool) {
-      println(job)
+    for (job <- jobpool) {      
       val pcb = allocate(job.limit, job)
       if (pcb.isDefined) {
         memory += job
