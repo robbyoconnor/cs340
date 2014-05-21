@@ -6,7 +6,7 @@ class OS {
   var cdrws = new ArrayBuffer[CDRW]
   var disks = new ArrayBuffer[Disk]
   var readyqueue = new ReadyQueue
-  var jobpool = new JobPool
+  var jobpool = new ArrayBuffer[PCB]
   var memory = new ArrayBuffer[PCB]
   var holes = new ArrayBuffer[Block]
 
@@ -39,7 +39,7 @@ class OS {
     help
     var done = false
     do {
-      if (!jobpool.empty)
+      if (!jobpool.isEmpty)
         processJobPool
       var userInput: String = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
       while (!Utils.validateInput(userInput)) {
@@ -59,7 +59,7 @@ class OS {
           pcb.tauLeft = initialTau
           pcb.limit = size
           if (size < totalMemory && size > holes.map(_.limit).sum) {
-            jobpool.enqueue(pcb)
+            jobpool += pcb
             println(s"Process ${pcb.pid} is in the job pool awaiting free space.")
           } else {
             if (doWeCompact(size)) {
@@ -272,7 +272,7 @@ class OS {
   }
   def largestFit(size: Int): Int = {
     var largestfit: Int = -1
-    for (i <- 0 to holes.size - 1) {
+    for (i <- 0 to holes.size - 1 if holes.size>0) {
       if (holes(i).limit >= size && holes.map(_.limit).sum > 0) largestfit = i
     }
     return largestfit
@@ -316,13 +316,25 @@ class OS {
       holes += new Block(memory(memory.length - 1).base + memory(memory.length - 1).limit, totalFreeMemory)
     }
   }
-
-  def processJobPool {
-    for (job <- jobpool.queue) {
+   def jobpoolSnapshot:String ={
+    if (jobpool.isEmpty)
+      "Job Pool is empty"      
+    else {
+      var data = new ArrayBuffer[ArrayBuffer[Any]]()
+      data += ArrayBuffer("PID", "Limit")
+      for (job <- jobpool) {
+        data += ArrayBuffer(job.pid, job.limit)
+      }
+      Utils.Tabulator.format(data)
+    }
+  }
+  def processJobPool {    
+    for (job <- jobpool) {
+      println(job)
       val pcb = allocate(job.limit, job)
       if (pcb.isDefined) {
         memory += job
-        jobpool.queue -= job
+        jobpool -= job
         println(s"Process ${job.pid} has been moved from the job pool to the ready queue!")
       }
     }
