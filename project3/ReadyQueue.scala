@@ -8,6 +8,10 @@ class ReadyQueue {
     queue += pcb
     pcb
   }
+  
+  def +=(pcb:PCB) {
+    enqueue(pcb)
+  }
 
   def dequeue: PCB = queue.dequeue
 

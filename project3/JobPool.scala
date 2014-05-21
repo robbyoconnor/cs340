@@ -14,5 +14,33 @@ class JobPool {
   }
 
   def dequeue: PCB = queue.remove(0)
-   
+  
+  def processJobPool(os:OS) {        
+    if(queue.isEmpty) {
+      return
+    }
+    for (job <- queue) {      
+      val _pcb = os.allocate(job.limit, job)
+      println(_pcb)
+      if (_pcb.isDefined) {
+        os.memory += job
+        os.readyqueue.enqueue(job)        
+        queue -= job
+        println(s"Process ${job.pid} has been moved from the job pool to the ready queue!")
+      } 
+    }
+  }
+
+  def snapshot:String ={
+    if (queue.isEmpty)
+      "Job Pool is empty"      
+    else {
+      var data = new ArrayBuffer[ArrayBuffer[Any]]()
+      data += ArrayBuffer("PID", "Limit")
+      for (job <- queue) {
+        data += ArrayBuffer(job.pid, job.limit)
+      }
+      Utils.Tabulator.format(data)
+    }
+  }
 }

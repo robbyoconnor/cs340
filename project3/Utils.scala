@@ -186,7 +186,7 @@ object Utils {
         data2 += ArrayBuffer(block.pid, base, limit)
       }
     }
-    println(s"Job Pool\n${os.jobpoolSnapshot}\nHoles\n${if (holes.size > 0) Tabulator.format(data) else "No Holes."}\nMemory\n${if (!mem.isEmpty) Tabulator.format(data2) else "Empty"}")
+    println(s"Job Pool\n${os.jobpool.snapshot}\nHoles\n${if (holes.size > 0) Tabulator.format(data) else "No Holes."}\nMemory\n${if (!mem.isEmpty) Tabulator.format(data2) else "Empty"}")
   }
 
   // taken from somewhere -- I don't remember where -- point is I didn't write it but I don't know where I got it.

@@ -8,8 +8,7 @@ class PCB {
   var base: Int = 0
 
   var limit: Int = 0
-    
-  
+      
   var readwrite: String = ""
 
   var fileName: String = ""

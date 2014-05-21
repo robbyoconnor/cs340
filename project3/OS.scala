@@ -6,7 +6,7 @@ class OS {
   var cdrws = new ArrayBuffer[CDRW]
   var disks = new ArrayBuffer[Disk]
   var readyqueue = new ReadyQueue
-  var jobpool = new ArrayBuffer[PCB]
+  var jobpool = new JobPool
   var memory = new ArrayBuffer[PCB]
   var holes = new ArrayBuffer[Block]
 
@@ -39,8 +39,7 @@ class OS {
     help
     var done = false
     do {
-      if (!jobpool.isEmpty)
-        processJobPool
+      jobpool.processJobPool(this)
       var userInput: String = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
       while (!Utils.validateInput(userInput)) {
         println("Invalid input")
@@ -50,7 +49,7 @@ class OS {
       totalFreeMemory = holes.map(_.limit).sum
       if (userInput == "A") {
         interruptRQ
-        var size = Utils.promptForInt("How big is this process (in words, greater than 0): ")
+        var size = Utils.promptForInt(s"How big is this process (in words, greater than 0) [1-${holes.map(_.limit).sum} words:")
         if (size > totalMemory) {
           println(s"process size $size words has been rejected since it exceeds $totalMemory words")
         } else {
@@ -59,18 +58,18 @@ class OS {
           pcb.tauLeft = initialTau
           pcb.limit = size
           if (size < totalMemory && size > holes.map(_.limit).sum) {
-            jobpool += pcb
+            jobpool.queue += pcb
             println(s"Process ${pcb.pid} is in the job pool awaiting free space.")
           } else {
             if (doWeCompact(size)) {
               compactMemory
             }
-            var _pcb = allocate(pcb.limit, pcb)
+            var _pcb = allocate(pcb.limit, pcb)            
             if (_pcb.isDefined) {
               memory += _pcb.get
               readyqueue.enqueue(_pcb.get)
               totalFreeMemory -= size
-              println(s"Process ${pcb.pid} has been allocated ${pcb.limit} words and is in the ready queue!")
+              println(s"Process ${_pcb.get.pid} has been allocated ${_pcb.get.limit} words and is in the ready queue!")
             }
           }
         }
@@ -272,17 +271,19 @@ class OS {
   }
   def largestFit(size: Int): Int = {
     var largestfit: Int = -1
-    for (i <- 0 to holes.size - 1 if holes.size>0) {
-      if (holes(i).limit >= size && holes.map(_.limit).sum > 0) largestfit = i
-    }
+    if(holes.isEmpty) 
+      return largestfit
+    for (i <- 0 to holes.size - 1 if holes.size>0) {    
+      if (holes(i).limit >= size && holes.map(_.limit).sum > 0) largestfit = i      
+    }    
     return largestfit
   }
 
   def doWeCompact(size: Int) = (holes.size > 1 && size <= holes.map(_.limit).sum)
 
   def allocate(size: Int, pcb: PCB): Option[PCB] = {
-    var fit = largestFit(size)
-    if (fit < 0) {
+    var fit = largestFit(size)    
+    if (fit < 0) {     
       return None
     }
     var block = holes(fit)
@@ -316,32 +317,12 @@ class OS {
       holes += new Block(memory(memory.length - 1).base + memory(memory.length - 1).limit, totalFreeMemory)
     }
   }
-   def jobpoolSnapshot:String ={
-    if (jobpool.isEmpty)
-      "Job Pool is empty"      
-    else {
-      var data = new ArrayBuffer[ArrayBuffer[Any]]()
-      data += ArrayBuffer("PID", "Limit")
-      for (job <- jobpool) {
-        data += ArrayBuffer(job.pid, job.limit)
-      }
-      Utils.Tabulator.format(data)
-    }
-  }
-  def processJobPool {    
-    for (job <- jobpool) {      
-      val pcb = allocate(job.limit, job)
-      if (pcb.isDefined) {
-        memory += job
-        jobpool -= job
-        println(s"Process ${job.pid} has been moved from the job pool to the ready queue!")
-      }
-    }
-  }
+     
   def freeMemory(base: Int, limit: Int, pcb: PCB) {
     for (process <- memory)
       if (process == pcb) memory -= process
     holes += new Block(base, limit)
+    memory -= pcb
     totalFreeMemory = holes.map(_.limit).sum
   }
 }
