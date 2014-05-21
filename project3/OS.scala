@@ -81,9 +81,10 @@ class OS {
 
       } else if (userInput == "S") {
         var selection = readLine("[r,d,p,c,m]: ")
-        while (!Utils.validateInput(selection)) {
+        while (!Utils.validatesnapshot(selection)) {
           selection = readLine("Not valid. [r,d,p,c,m]")
         }
+        
         if (selection == "r") {
           snapshot(readyQ = true)
         } else if (selection == "d") {
@@ -94,8 +95,6 @@ class OS {
           snapshot(cdrwQ = true)
         } else if (selection == "m") {
           snapshot(mem = true)
-        } else {
-          print("If we get here...fail me.")
         }
       } else if (Utils.checkInterruptSyscall(userInput)) {
         if (userInput.head.isUpper) {

@@ -66,13 +66,16 @@ object Utils {
     pcb
   }
 
-  def validateInput(input: String): Boolean = {
-    input.stripSuffix(" ")
-    input.stripPrefix(" ")
+  def validateInput(input: String): Boolean = {    
     input match {
       case r"[AtSQq]{1}|[pPdDcC]\d+|[rdpcm]{1}|[rw]{1}" => true
       case _ => false
-    }
+    }    
+  }
+  
+  def validatesnapshot(input:String): Boolean = input match {
+    case r"[rdpcm]{1}" => true
+    case _ => false
   }
 
   def promptForFloat(msg: String = "", a: Float = 0.0f, b: Float = 0.0f, validateRange: Boolean = false): Float = {
