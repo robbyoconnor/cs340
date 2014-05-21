@@ -39,6 +39,8 @@ class OS {
     help
     var done = false
     do {
+      if (!jobpool.empty)
+        processJobPool
       var userInput: String = readLine("[A,S,t,p#,d#,c#,P#,D#,C#]:")
       while (!Utils.validateInput(userInput)) {
         println("Invalid input")
@@ -46,8 +48,6 @@ class OS {
 
       }
       totalFreeMemory = holes.map(_.limit).sum
-      if(jobpool.queue.size >0)
-        processJobPool
       if (userInput == "A") {
         interruptRQ
         var size = Utils.promptForInt("How big is this process (in words, greater than 0): ")
@@ -62,15 +62,11 @@ class OS {
             jobpool.enqueue(pcb)
             println(s"Process ${pcb.pid} is in the job pool awaiting free space.")
           } else {
-                                   
-            if (doWeCompact(size)) {              
+            if (doWeCompact(size)) {
               compactMemory
             }
-
             var _pcb = allocate(pcb.limit, pcb)
-            println(pcb)
             if (_pcb.isDefined) {
-              println("ok....")
               memory += _pcb.get
               readyqueue.enqueue(_pcb.get)
               totalFreeMemory -= size
@@ -84,7 +80,7 @@ class OS {
         while (!Utils.validatesnapshot(selection)) {
           selection = readLine("Not valid. [r,d,p,c,m]")
         }
-        
+
         if (selection == "r") {
           snapshot(readyQ = true)
         } else if (selection == "d") {
@@ -310,11 +306,11 @@ class OS {
     if (!memory.isEmpty)
       memory(0).base = 1
     for (i <- 0 until memory.length - 1 if i > 0) {
-      memory(i + 1).base = memory(i).base + memory(i).limit      
+      memory(i + 1).base = memory(i).base + memory(i).limit
     }
-    if(memory.isEmpty) {
+    if (memory.isEmpty) {
       holes.clear()
-      holes += new Block(1,totalMemory)    
+      holes += new Block(1, totalMemory)
     } else if (holes.length > 1 && memory.map(_.limit).sum <= totalMemory) {
       holes.clear()
       holes += new Block(memory(memory.length - 1).base + memory(memory.length - 1).limit, totalFreeMemory)
@@ -322,18 +318,15 @@ class OS {
   }
 
   def processJobPool {
-    for (pcb <- jobpool.queue) {
-      val _pcb = allocate(pcb.limit, pcb)
-      if (_pcb.isDefined) {
-        memory += _pcb.get
-        readyqueue.enqueue(_pcb.get)
-        jobpool.queue -= pcb
-        totalFreeMemory = if (holes.isEmpty) 0 else holes.map(_.limit).sum
-        println(s"Process ${pcb.pid} of size ${pcb.limit} words has been moved from the job pool to the Ready Queue!")
+    for (job <- jobpool.queue) {
+      val pcb = allocate(job.limit, job)
+      if (pcb.isDefined) {
+        memory += job
+        jobpool.queue -= job
+        println(s"Process ${job.pid} has been moved from the job pool to the ready queue!")
       }
     }
   }
-
   def freeMemory(base: Int, limit: Int, pcb: PCB) {
     for (process <- memory)
       if (process == pcb) memory -= process
