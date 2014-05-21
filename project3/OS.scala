@@ -46,29 +46,39 @@ class OS {
 
       }
       totalFreeMemory = holes.map(_.limit).sum
-      processJobPool
+      if(jobpool.queue.size >0)
+        processJobPool
       if (userInput == "A") {
         interruptRQ
         var size = Utils.promptForInt("How big is this process (in words, greater than 0): ")
         if (size > totalMemory) {
           println(s"process size $size words has been rejected since it exceeds $totalMemory words")
-        }
-        var pcb = new PCB
-        pcb.tau = initialTau
-        pcb.tauLeft = initialTau
-        pcb.limit = size
-        if (size < totalMemory && size > totalFreeMemory) {
-          jobpool.enqueue(pcb)
-          println(s"Process ${pcb.pid} is in the job pool awaiting free space.")          
         } else {
-          var _pcb = allocate(pcb.limit, pcb)
-          if (_pcb.isDefined) {
-            memory += _pcb.get
-            readyqueue.enqueue(_pcb.get)
-            totalFreeMemory -= size
-            println(s"Process ${pcb.pid} has been allocated ${pcb.limit} words and is in the ready queue!")
+          var pcb = new PCB
+          pcb.tau = initialTau
+          pcb.tauLeft = initialTau
+          pcb.limit = size
+          if (size < totalMemory && size > holes.map(_.limit).sum) {
+            jobpool.enqueue(pcb)
+            println(s"Process ${pcb.pid} is in the job pool awaiting free space.")
+          } else {
+                                   
+            if (doWeCompact(size)) {              
+              compactMemory
+            }
+
+            var _pcb = allocate(pcb.limit, pcb)
+            println(pcb)
+            if (_pcb.isDefined) {
+              println("ok....")
+              memory += _pcb.get
+              readyqueue.enqueue(_pcb.get)
+              totalFreeMemory -= size
+              println(s"Process ${pcb.pid} has been allocated ${pcb.limit} words and is in the ready queue!")
+            }
           }
         }
+
       } else if (userInput == "S") {
         var selection = readLine("[r,d,p,c,m]: ")
         while (!Utils.validateInput(selection)) {
@@ -106,7 +116,7 @@ class OS {
           pcb.burstCount += 1
           completedProcesses += 1
           freeMemory(pcb.base, pcb.limit, pcb)
-          println(s"Freed ${pcb.limit - pcb.base} words of memory");
+          println(s"Freed ${pcb.limit} words of memory");
           println("Terminating process...")
           println(s"Average burst time: ${pcb.bursts / pcb.burstCount}")
           println(s"Total process CPU time ${pcb.cpuTime}")
@@ -122,7 +132,7 @@ class OS {
 
   }
 
-  def help = {
+  def help {
     println(s"Welcome to the OS...Here's how it works: ")
     println(s"'A' will create a new process (exclude quotes).")
     println(s"Lower case letters are system calls. e.g., p1")
@@ -136,7 +146,7 @@ class OS {
 
   }
 
-  def snapshot(printerQ: Boolean = false, diskQ: Boolean = false, cdrwQ: Boolean = false, readyQ: Boolean = false, mem: Boolean = false) = {
+  def snapshot(printerQ: Boolean = false, diskQ: Boolean = false, cdrwQ: Boolean = false, readyQ: Boolean = false, mem: Boolean = false) {
 
     if (diskQ) {
       var num: Int = 1
@@ -164,7 +174,7 @@ class OS {
     }
   }
 
-  def syscall(userInput: String = "") = {
+  def syscall(userInput: String = "") {
     var tuple: (String, Int) = Utils.extractDeviceInfo(userInput)
     var deviceNo: Int = tuple._2 - 1
     if (tuple._1 == "c") {
@@ -268,20 +278,23 @@ class OS {
   def largestFit(size: Int): Int = {
     var largestfit: Int = -1
     for (i <- 0 to holes.size - 1) {
-      if (holes(i).size >= size && totalFreeMemory > 0) largestfit = i
+      if (holes(i).limit >= size && holes.map(_.limit).sum > 0) largestfit = i
     }
     return largestfit
   }
 
+  def doWeCompact(size: Int) = (holes.size > 1 && size <= holes.map(_.limit).sum)
+
   def allocate(size: Int, pcb: PCB): Option[PCB] = {
     var fit = largestFit(size)
-    if (fit < 0)
+    if (fit < 0) {
       return None
+    }
     var block = holes(fit)
-    if (block.size == size) {
+    if (block.limit == size) {
       holes.remove(fit)
       pcb.base = block.base
-    } else if (block.size > size) {
+    } else if (block.limit > size) {
       pcb.base = block.base
       if (block.limit - size > 0) {
         block.base = pcb.base + pcb.limit
@@ -294,15 +307,18 @@ class OS {
   }
 
   def compactMemory {
-    var pcb: Option[PCB] = None    
-    if(!memory.isEmpty)
+    var pcb: Option[PCB] = None
+    if (!memory.isEmpty)
       memory(0).base = 1
-    for (i <- 0 until memory.length - 1 if i >0) {                  
-    	memory(i+1).base = memory(i).base+memory(i).limit
-    }    
-    if(holes.length > 1 && memory.map(_.limit).sum <= totalMemory) {      
+    for (i <- 0 until memory.length - 1 if i > 0) {
+      memory(i + 1).base = memory(i).base + memory(i).limit      
+    }
+    if(memory.isEmpty) {
       holes.clear()
-      holes += new Block(memory(memory.length-1).base+memory(memory.length-1).limit,totalFreeMemory)      
+      holes += new Block(1,totalMemory)    
+    } else if (holes.length > 1 && memory.map(_.limit).sum <= totalMemory) {
+      holes.clear()
+      holes += new Block(memory(memory.length - 1).base + memory(memory.length - 1).limit, totalFreeMemory)
     }
   }
 
@@ -311,10 +327,10 @@ class OS {
       val _pcb = allocate(pcb.limit, pcb)
       if (_pcb.isDefined) {
         memory += _pcb.get
-        readyqueue.enqueue(_pcb.get)        
+        readyqueue.enqueue(_pcb.get)
         jobpool.queue -= pcb
-        totalFreeMemory = if(holes.isEmpty) 0 else holes.map(_.limit).sum
-        println(s"Process ${pcb.pid} of size ${pcb.limit} words has been moved from the job pool to the Ready Queue!")        
+        totalFreeMemory = if (holes.isEmpty) 0 else holes.map(_.limit).sum
+        println(s"Process ${pcb.pid} of size ${pcb.limit} words has been moved from the job pool to the Ready Queue!")
       }
     }
   }
@@ -324,7 +340,6 @@ class OS {
       if (process == pcb) memory -= process
     holes += new Block(base, limit)
     totalFreeMemory = holes.map(_.limit).sum
-    compactMemory
   }
 }
 

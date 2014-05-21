@@ -49,14 +49,13 @@ object Utils {
     if (pcb.readwrite == "w") {
       pcb.fileSize = promptForFloat("How big is the file: ")
     }
-    val memoryStartRegion = promptForInt("Enter a memory start region (must be an integer): ")
-    if (!validateLogicalAddress(pcb.base, memoryStartRegion, pcb.limit)) {
+    var memoryStartRegion = promptForInt(s"Enter a memory start region (must be an integer) Range [1,${pcb.limit}]: ")
+    while (!validateLogicalAddress(pcb.base, memoryStartRegion, pcb.limit)) {
       println("Invalid memory start address!")
-      return null
-    } else {
-      pcb.memoryStartRegion = memoryStartRegion
+      memoryStartRegion = promptForInt(s"Enter a memory start region (must be an integer) Range [1,${pcb.limit}]: ")
     }
-
+    pcb.memoryStartRegion = memoryStartRegion
+  
     if (disk) {
       var cylinder = promptForInt("Enter a cylinder #: ")
       while (!checkRange(cylinder, 1, numCylinders)) {
@@ -107,7 +106,7 @@ object Utils {
 
   def checkRange(input: Int, a: Int, b: Int): Boolean = input >= a && input <= b
 
-  def validateLogicalAddress(base: Int, logical: Int, limit: Int) = logical >= base && logical < limit
+  def validateLogicalAddress(base: Int, logical: Int, limit: Int) = logical <= limit
 
   def logicalToPhysicalAddress(base: Int, logical: Int, limit: Int): Int = if (validateLogicalAddress(base, logical, limit)) base + logical else -1
 
@@ -159,10 +158,10 @@ object Utils {
 
   def snapshot(queue: Iterable[PCB]) = {
     var data: ArrayBuffer[ArrayBuffer[Any]] = new ArrayBuffer[ArrayBuffer[Any]]()
-    data.append(ArrayBuffer("PID", "Cyl.", "file", "length", "cpuTime", "tau", "timeRem.", "avgBurst", "base", "limit", "physAddr."))
+    data.append(ArrayBuffer("PID", "Cyl.", "file", "length", "cpuTime", "tau", "timeRem.", "avgBurst", "base", "limit", "logicalAddr", "physAddr."))
     for (pcb <- queue) {
       val averageBursts = if (pcb.burstCount > 0) pcb.bursts / pcb.burstCount else 0.0f
-      data += ArrayBuffer(pcb.pid, pcb.cylinder, pcb.fileName, pcb.fileSize, pcb.cpuTime, pcb.tau, pcb.tauLeft, averageBursts, pcb.base, pcb.limit, pcb.memoryStartRegion)
+      data += ArrayBuffer(pcb.pid, pcb.cylinder, pcb.fileName, pcb.fileSize, pcb.cpuTime, pcb.tau, pcb.tauLeft, averageBursts, pcb.base, pcb.limit, pcb.memoryStartRegion, pcb.memoryStartRegion+pcb.base)
     }
     println(Tabulator.format(data))
   }
@@ -184,7 +183,7 @@ object Utils {
         data2 += ArrayBuffer(block.pid, base, limit)
       }
     }
-    println(s"Job Pool\n\n${os.jobpool.snapshot}\n\nHoles\n\n${ if(holes.size >0) Tabulator.format(data) else "No Holes."}\nMemory\n${if (!mem.isEmpty) Tabulator.format(data2) else "Empty"}")
+    println(s"Job Pool\n${os.jobpool.snapshot}\nHoles\n${if (holes.size > 0) Tabulator.format(data) else "No Holes."}\nMemory\n${if (!mem.isEmpty) Tabulator.format(data2) else "Empty"}")
   }
 
   // taken from somewhere -- I don't remember where -- point is I didn't write it but I don't know where I got it.

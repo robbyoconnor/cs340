@@ -55,6 +55,5 @@ object PID {
 
 class Block(_base: Int, _limit: Int) {
   var base: Int = _base
-  var limit: Int = _limit
-  var size: Int = limit - base
+  var limit: Int = _limit  
 }
