@@ -19,7 +19,7 @@ class JobPool {
     if (queue.isEmpty) {
       return
     } else {
-      for (job <- queue) {
+      for (job <- queue if(job!= null)) {
         val _pcb = os.allocate(job.limit, job)
         if (_pcb.isDefined) {
           os.memory += job
@@ -28,7 +28,7 @@ class JobPool {
           println(s"Process ${job.pid} has been moved from the job pool to the ready queue!")
         }
       }
-    }
+    }    
   }
 
   def snapshot: String = {
