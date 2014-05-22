@@ -9,4 +9,7 @@ sbt will download scala 2.11.0 prior to compiling.
 
 To run simply type sbt run 
 
+Build using scala 
 
+scalac *.scala 
+scala -cp . -Xnojline RunThis

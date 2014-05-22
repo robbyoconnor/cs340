@@ -59,7 +59,7 @@ class OS {
           pcb.tau = initialTau
           pcb.tauLeft = initialTau
           pcb.limit = size
-          if (size < totalMemory && size > holes.map(_.limit).sum) {
+          if (size <= totalMemory && size > holes.map(_.limit).sum) {
             jobpool.queue += pcb
             println(s"Process ${pcb.pid} is in the job pool awaiting free space.")
           } else {
