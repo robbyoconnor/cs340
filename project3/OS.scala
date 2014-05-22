@@ -49,7 +49,9 @@ class OS {
       totalFreeMemory = holes.map(_.limit).sum
       if (userInput == "A") {
         interruptRQ
-        var size = Utils.promptForInt(s"How big is this process (in words, greater than 0) [1-${holes.map(_.limit).sum} words:")
+        totalFreeMemory = holes.map(_.limit).sum
+        val free = if(totalFreeMemory > 0) s"${totalFreeMemory}/${totalMemory} words free" else "There is no free memory, this job will be sent to the job pool." 
+        val size = Utils.promptForInt(s"$free\nHow big is this process (in words, greater than 0) [Cannot exceed ${totalMemory} words]:")
         if (size > totalMemory) {
           println(s"process size $size words has been rejected since it exceeds $totalMemory words")
         } else {
@@ -306,7 +308,7 @@ class OS {
     var pcb: Option[PCB] = None
     if (!memory.isEmpty)
       memory(0).base = 1
-    for (i <- 0 until memory.length - 1 if i > 0) {
+    for (i <- 0 until memory.length - 1) {
       memory(i + 1).base = memory(i).base + memory(i).limit
     }
     if (memory.isEmpty) {

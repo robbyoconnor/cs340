@@ -20,8 +20,7 @@ class JobPool {
       return
     }
     for (job <- queue) {      
-      val _pcb = os.allocate(job.limit, job)
-      println(_pcb)
+      val _pcb = os.allocate(job.limit, job)      
       if (_pcb.isDefined) {
         os.memory += job
         os.readyqueue.enqueue(job)        
