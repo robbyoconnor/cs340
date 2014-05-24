@@ -1,0 +1,93 @@
+You don't trap an out-of-range access. program size is 500000, "memory start" is 250000 and file length is 260000. The end of the file is at logical 510000>limit:
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c,m]: r
++---+----+----+------+-------+----+--------+--------+------+------+-----------+---------+
+|PID|Cyl.|file|length|cpuTime| tau|timeRem.|avgBurst|  base| limit|logicalAddr|physAddr.|
++---+----+----+------+-------+----+--------+--------+------+------+-----------+---------+
+|  2|   0|    |   0.0|    0.0|10.0|     0.0|     2.0|     1|500000| 0|        1|
+|  4|   0|    |   0.0|    0.0|10.0|    10.0|     0.0|500001|100000| 0|   500001|
+|  5|   0|    |   0.0|    0.0|10.0|    10.0|     0.0|600001|300000| 0|   600001|
+|  6|   0|    |   0.0|    0.0|10.0|    10.0|     0.0|900001|100000| 0|   900001|
++---+----+----+------+-------+----+--------+--------+------+------+-----------+---------+
+[A,S,t,p#,d#,c#,P#,D#,C#]:p1
+How much time was this process in the CPU in ms (float)1
+Enter a file name: 1
+How big is the file: 260000
+Enter a memory start region (must be an integer) Range [1,500000]: 250000
+Process 2 has been sent to disk printer 1
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+
+You don't compactify and load from the job pool. Note below there is a process in the job pool needing 200000 words, and two 100000 holes:
+[A,S,t,p#,d#,c#,P#,D#,C#]:S
+[r,d,p,c,m]: m
+Free Memory: 200000  / 1000000
+Job Pool
++---+------+
+|PID| Limit|
++---+------+
+|  3|600000|
+|  7|200000|
++---+------+
+Holes
++------+------+
+|  Base| Limit|
++------+------+
+|900001|100000|
+|500001|100000|
++------+------+
+Memory
++---+------+------+
+|PID|  Base| Limit|
++---+------+------+
+|  2|     1|500000|
+|  5|600001|300000|
++---+------+------+
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+
+You do compatcify on an "A".
+
+Crash while moving multiple jobs from the job pool:
+[A,S,t,p#,d#,c#,P#,D#,C#]:t
+How long was this process in the CPU for: 3
+Freed 500000 words of memory
+Terminating process...
+Average burst time: 1.5714285
+Total process CPU time 4.0
+Total System per completed process: 5.0
+Terminated process 2
+Process 7 has been moved from the job pool to the ready queue!
+Process 10 has been moved from the job pool to the ready queue!
+Process 12 has been moved from the job pool to the ready queue!
+[error] (run-main-0) java.lang.NullPointerException
+java.lang.NullPointerException
+    at JobPool$$anonfun$processJobPool$1.apply(JobPool.scala:23)
+    at JobPool$$anonfun$processJobPool$1.apply(JobPool.scala:22)
+    at scala.collection.mutable.ResizableArray$class.foreach(ResizableArray.scala:59)
+    at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:48)
+    at JobPool.processJobPool(JobPool.scala:22)
+    at OS.run(OS.scala:41)
+    at RunThis$.delayedEndpoint$RunThis$1(OS.scala:335)
+    at RunThis$delayedInit$body.apply(OS.scala:332)
+    at scala.Function0$class.apply$mcV$sp(Function0.scala:40)
+    at scala.runtime.AbstractFunction0.apply$mcV$sp(AbstractFunction0.scala:12)
+    at scala.App$$anonfun$main$1.apply(App.scala:76)
+    at scala.App$$anonfun$main$1.apply(App.scala:76)
+    at scala.collection.immutable.List.foreach(List.scala:383)
+    at scala.collection.generic.TraversableForwarder$class.foreach(TraversableForwarder.scala:35)
+    at scala.App$class.main(App.scala:76)
+    at RunThis$.main(OS.scala:332)
+    at RunThis.main(OS.scala)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke(Method.java:622)
+[trace] Stack trace suppressed: run last compile:run for the full output.
+java.lang.RuntimeException: Nonzero exit code: 1
+    at scala.sys.package$.error(package.scala:27)
+[trace] Stack trace suppressed: run last compile:run for the full output.
+[error] (compile:run) Nonzero exit code: 1
+[error] Total time: 645 s, completed May 24, 2014 1:41:34 PM
+>
+
+
+So the basic memory management is OK, the logical to physical mapping is OK, but there are missing error traps and the job pool is not handled at all well. Had this been the first submission, 7, but resubmitted 7-2=5.
