@@ -1,0 +1,52 @@
+Running under 3.1:
+
+Tabs aren't enough to get "nice" columnar output:
+{{{{{{{{{{{{{{{{{{{{{{{{{{{{
+[A,S,t,p#,d#,c#,P#,D#,C#]: S
+[r,d,p,c]: p
+PID    File name    MemStart    R/W    File Length
+
+---    ---------    ---------    ---    ----------
+
+Printer 1 Queue
+8    123    123    w        123
+7    222222222    22    w        2
+5    1    1    w        1
+Printer 2 Queue
+6    23232222    22222    w        222222
+Printer 3 Queue
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+
+You are taking things off the ready queue LIFO, not FIFO! Same for the printer queue.
+[[[[[[[[[[[[[[
+Ready Queue
+
+----- -----
+
+1
+2
+3
+4
+6    23232222    22222    w    222222
+5    1    1    w    1
+[A,S,t,p#,d#,c#,P#,D#,C#]: t
+Terminated Process 5
+[A,S,t,p#,d#,c#,P#,D#,C#]: t
+Terminated Process 6
+[A,S,t,p#,d#,c#,P#,D#,C#]: t
+Terminated Process 4
+[A,S,t,p#,d#,c#,P#,D#,C#]: A
+Added process 9
+[A,S,t,p#,d#,c#,P#,D#,C#]: A
+Added process 10
+[A,S,t,p#,d#,c#,P#,D#,C#]: t
+Terminated Process 10
+[A,S,t,p#,d#,c#,P#,D#,C#]:
+]]]]]]]]]]]]]]]
+
+On disk and CD operations, you are only supposed to pass the file size parameter if it is a write operation. How is the CPU supposed to know the size of a file not yet read?
+
+All else seems to work. Errors are handeled well. The output formatting doesn't cost a point, but the wrong dequeueing algorithm and the passed parameters do. 8.
+
+
