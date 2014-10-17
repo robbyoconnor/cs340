@@ -34,3 +34,38 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+target/
+.idea/
+*.class
+*.pydevproject
+.metadata
+.gradle
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+
+# External tool builders
+.externalToolBuilders/
+#
+# # Locally stored "Eclipse launch configurations"
+*.launch
+#
+
+# # PDT-specific
+.buildpath
+#
+# # sbteclipse plugin 
+.target
+#
+*.tgz 
+*.iml
+.cache
+.classpath
+
+
